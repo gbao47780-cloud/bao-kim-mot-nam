@@ -1,0 +1,204 @@
+{
+  "fps": 24,
+  "characters": {
+    "bao": {
+      "idle": {
+        "src": "./cats/bao-idle.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": true
+      },
+      "walk": {
+        "src": "./cats/bao-walk.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": true,
+        "stridePx": 48
+      },
+      "stop": {
+        "src": "./cats/bao-stop.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "sit": {
+        "src": "./cats/bao-sit.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "release": {
+        "src": "./cats/bao-release.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false,
+        "releaseFrame": 14
+      },
+      "lie": {
+        "src": "./cats/bao-lie.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "curl": {
+        "src": "./cats/bao-curl.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "sleep": {
+        "src": "./cats/bao-sleep.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": true
+      }
+    },
+    "kim": {
+      "idle": {
+        "src": "./cats/kim-idle.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": true
+      },
+      "walk": {
+        "src": "./cats/kim-walk.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": true,
+        "stridePx": 48
+      },
+      "stop": {
+        "src": "./cats/kim-stop.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "sit": {
+        "src": "./cats/kim-sit.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "release": {
+        "src": "./cats/kim-release.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "lie": {
+        "src": "./cats/kim-lie.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "curl": {
+        "src": "./cats/kim-curl.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": false
+      },
+      "sleep": {
+        "src": "./cats/kim-sleep.webp",
+        "width": 256,
+        "height": 224,
+        "columns": 6,
+        "count": 24,
+        "anchor": [
+          128,
+          204
+        ],
+        "loop": true
+      }
+    }
+  }
+}

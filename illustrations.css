@@ -1,0 +1,40 @@
+.bk-walk::before{background:linear-gradient(90deg,#fff4e642,#fff6e7a6 45%,#fff2e654),url('./art/memory-path.webp') center / cover no-repeat}
+.late-scene{--late-scene-height:calc(100svh - clamp(62px,8.8svh,88px) - clamp(56px,7.2svh,75px));padding-block:clamp(14px,3vh,34px)}
+.late-backdrop{filter:saturate(.93)}.late-heading{text-shadow:0 1px 3px #fff1df,0 1px 15px #fff2dc}
+.late-cushion{background:transparent url('./art/cushion.webp') center /100% 100% no-repeat;border:0;box-shadow:none;border-radius:0}
+.late-party-stage .late-table{inset:46% 0 -9%;border:0;border-radius:0;background:transparent url('./art/table.webp') center/100% 100% no-repeat;box-shadow:none;filter:drop-shadow(0 7px 5px #75402f3b)}
+.late-party-stage .late-dessert{bottom:35%;height:55%;width:29%}
+.late-party-stage .late-plate,.late-party-stage .late-icing,.late-party-stage .late-berries,.late-party-stage .late-cake-mark{display:none}
+.late-party-stage .late-cake{inset:0;background:transparent url('./art/cake.webp') center bottom/contain no-repeat;box-shadow:none;border:0;border-radius:0;filter:drop-shadow(1px 5px 3px #4d242838)}
+.late-party-stage .late-candles{inset:auto 36% 77%;height:29%}
+.late-party-stage .late-party-cats{left:6%;width:28%;bottom:35%;height:57%}
+.late-party-stage .late-table-album{bottom:34%;right:7%;width:23%;height:31%;border:0;border-radius:0;box-shadow:none;transform:rotate(-5deg);background:transparent url('./art/album.webp') center/100% 100% no-repeat;filter:drop-shadow(2px 4px 2px #44273163)}
+.late-party-stage .late-table-album:hover{transform:rotate(-7deg) translateY(-2px)}.late-table-album .late-book-cover{visibility:hidden}
+.late-party-stage .late-keepsakes{bottom:33%}.late-sprig{opacity:.85}
+.late-letter .late-envelope{background:transparent url('./art/envelope.webp') center/100% 100% no-repeat;box-shadow:none;border:0}
+.late-envelope .late-envelope-pocket,.late-envelope .late-envelope-seal{opacity:0}.late-envelope .late-envelope-flap{background:transparent;border-color:transparent}
+.late-letter[data-letter-state="opening"] .late-envelope,.late-letter[data-letter-state="reading"] .late-envelope{background-image:url('./art/envelope-open.webp')}
+@media(max-width:540px){.late-scene{--late-scene-height:calc(100svh - 96px)}.late-party-stage .late-party-cats{left:4%;width:30%}.late-party-stage .late-table-album{right:5%;width:24%;height:25%}.late-party-stage .late-dessert{width:32%;min-width:0}}
+body{height:100vh;height:100dvh;min-height:0}#scene{grid-template-rows:minmax(0,1fr);overflow:auto}
+.bk-early.bk-walk,.bk-early.bk-album,.late-scene{min-block-size:0}
+.late-letter[data-letter-state="reading"] .late-envelope{display:none}
+.late-letter[data-letter-state="reading"] .late-paper{display:flex;flex-direction:column;max-height:min(70dvh,600px);min-height:0;gap:.5rem}
+.late-paper-copy{overflow:auto;min-height:0;overscroll-behavior:contain;scrollbar-width:thin}
+.late-paper .late-continue{flex:none;align-self:flex-start}
+@media(max-width:760px){
+ #scene>.bk-album,#review-body>.bk-album{height:100%;grid-template-rows:auto minmax(0,1fr) auto;align-content:stretch;gap:6px;padding:10px 12px}
+ #review-body{height:min(84dvh,650px)}
+ .bk-album-stage{container-type:size;grid-template-rows:minmax(0,1fr) auto;align-items:center}
+ .bk-album-stage .bk-book{--bk-book-width:min(69vw,calc((100cqh - 61px)*.707),310px)}
+ .bk-album-stage .bk-album-cats{height:50px;margin:0}
+ .bk-album .bk-controls{gap:5px}.bk-album .bk-controls button{min-height:39px;padding:5px 11px}
+ .bk-album .bk-page-count{margin:.14rem 0}.bk-album h1{font-size:clamp(24px,7vw,36px)}
+ .late-letter[data-letter-state="reading"]{display:grid;grid-template-rows:auto minmax(0,1fr);align-content:stretch;align-items:stretch;justify-content:stretch;gap:6px}
+ .late-letter[data-letter-state="reading"] .late-letter-stage{min-height:0;margin:0;grid-template-rows:minmax(55px,18%) minmax(0,1fr);gap:4px}
+ .late-letter[data-letter-state="reading"] .late-letter-cats{height:100%;max-height:100%}
+ .late-letter[data-letter-state="reading"] .late-mail{height:100%;min-height:0;display:block}
+ .late-letter[data-letter-state="reading"] .late-paper{height:100%;max-height:100%;width:min(100%,490px);margin:auto;padding:.85rem 1.1rem}
+ .late-letter[data-letter-state="reading"] .late-continue{min-height:40px;padding:6px 15px}
+ .late-letter[data-letter-state="reading"] .late-paper-copy{flex:1}
+}
+@media(min-width:761px){.bk-cover-copy::after{content:"";position:absolute;pointer-events:none;width:clamp(65px,7.2vw,124px);aspect-ratio:1;right:-2%;bottom:-7%;background:url('./art/roses.webp') center/contain no-repeat;transform:rotate(14deg);opacity:.93}}
