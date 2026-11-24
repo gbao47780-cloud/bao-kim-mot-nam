@@ -1,4 +1,4 @@
-import { createSoundtrack } from './soundtrack.js';
+import { createSoundtrack } from './soundtrack.js?v=041d0f2eedad';
 
 const root = document.querySelector('#scene');
 const reviewDialog = document.querySelector('#review');
@@ -17,11 +17,14 @@ function readMemories() {
     const result = await response.json();
     if (!Array.isArray(result.timeline) || !Array.isArray(result.album)) throw new Error('Danh sách ảnh sai định dạng.');
     return result;
-  }).catch(error => ({timeline:[], album:[], loadError:error.message}));
+  }).catch(error => {
+    memoriesPromise = undefined;
+    return {timeline:[], album:[], loadError:error.message};
+  });
 }
 function engine() {
   const generation = kittyGeneration;
-  return catEngine ||= import('./engine.js').then(m => m.createCats(pair)).then(instance => {
+  return catEngine ||= import('./engine.js?v=79c32783273e').then(m => m.createCats(pair)).then(instance => {
     if (generation !== kittyGeneration) { instance.destroy(); throw new DOMException('Đã phát lại', 'AbortError'); }
     return cats = instance;
   });
@@ -69,10 +72,12 @@ async function openChapter(number) {
   document.querySelectorAll('#chapters li').forEach((el,i)=>{if (i+1===number) el.setAttribute('aria-current','step'); else el.removeAttribute('aria-current');});
   root.focus({preventScroll:true}); window.scrollTo(0,0);
   try {
-    const module = await (number <= 3 ? import('./scenes-early.js') : import('./scenes-late.js'));
+    const module = await (number <= 3 ? import('./scenes-early.js?v=1255a636ff58') : import('./scenes-late.js?v=67ff55410fcc'));
     const memories = number === 1 ? {timeline:[],album:[]} : await readMemories();
     if (session.signal.aborted) return;
-    const ctx = {root,signal:session.signal,memories,cats:scopedCats(session),review:false,
+    const ctx = {root,signal:session.signal,memories,
+      warmWalk: () => readMemories().then(data => module.warmPrint(data.timeline[0])),
+      cats:scopedCats(session),review:false,
       phase:name=>{if(!session.signal.aborted)writePhase(name);},
       next() {
         if (session.signal.aborted || navigated || number >= 5) return;
@@ -96,7 +101,7 @@ async function reviewAlbum() {
   const session = reviewSession = sessionFor(container);
   reviewDialog.showModal();
   try {
-    const [{mountAlbum},memories] = await Promise.all([import('./scenes-early.js'),readMemories()]);
+    const [{mountAlbum},memories] = await Promise.all([import('./scenes-early.js?v=1255a636ff58'),readMemories()]);
     if (session.signal.aborted) return;
     const cleanup = await mountAlbum({root:container,signal:session.signal,memories,review:true,closeReview,
       next:closeReview,phase(){},cats:{mount(){},play:async()=>{},setPaused(){},setWalking(){}}});

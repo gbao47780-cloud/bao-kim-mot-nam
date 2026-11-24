@@ -1,4 +1,4 @@
-const manifestUrl = new URL('./cats/manifest.json',import.meta.url);
+const manifestUrl = new URL('./cats/manifest.json?v=92570a2e8c4f',import.meta.url);
 export async function createCats(container) {
   const response = await fetch(manifestUrl);
   if (!response.ok) throw new Error('Không thể mở bộ hoạt họa.');
@@ -34,8 +34,8 @@ export async function createCats(container) {
     if(!state||!width||!height||!container.isConnected)return;
     const frame=state.frame, name=state.name;
     const snuggle=name==='sleep'?1:name==='curl'?frame/23:0;
-    const separation=153-82*snuggle;
     const trail=container.closest('.bk-trail');
+    const separation=trail ? 174 : 153-82*snuggle;
     const scale=Math.min(height*.97/157,width*(trail ? .56 : .95)/(187+separation));
     const ground=height*.94;
     let x=width/2;
@@ -59,7 +59,10 @@ export async function createCats(container) {
       const left=anchorX-(tile.anchor[0]-(rect.offsetX||0))*scale;
       const top=anchorY-(tile.anchor[1]-(rect.offsetY||0))*scale;
       ctx.drawImage(bitmap,rect.x,rect.y,rect.w,rect.h,left,top,rect.w*scale,rect.h*scale);
-      if(i===1)mouth={x:left+181*scale,y:top+135*scale};
+      if(i===1 && tile.releaseFrame!==undefined){
+        const [mx,my]=tile.releaseMouth??[181,135];
+        mouth={x:anchorX+(mx-tile.anchor[0])*scale,y:anchorY+(my-tile.anchor[1])*scale};
+      }
     }
     canvas.dataset.frame=String(frame);canvas.dataset.clip=name;
   }
@@ -70,6 +73,7 @@ export async function createCats(container) {
     raf=0;
     if(!state||paused||document.hidden||destroyed||!container.isConnected){previousTime=null;return;}
     const delta=previousTime===null?0:(now-previousTime)/1000;previousTime=now;
+    const previousTick=Math.floor(state.elapsed*fps);
     state.elapsed+=delta;
     const lane = container.closest('.bk-trail');
     if (lane) {
@@ -81,10 +85,10 @@ export async function createCats(container) {
     }
     const count=state.meta[1].count, n=Math.floor(state.elapsed*fps);
     const actual=state.loop?n%count:Math.min(count-1,n);
-    if (state.name==='walk' && walking) distance+=delta*(state.meta[1].stridePx||0);
+    if (state.name==='walk' && walking) distance+=(n-previousTick)*(state.meta[1].stridePx||0)/fps;
     if (state.name==='stop') {const t=Math.min(1,actual/(count-1));distance=state.baseDistance+24*(2*t-t*t);}
     const frame=reduced.matches&&state.loop?0:actual;
-    if (state.frame!==frame || (walking&&state.name==='walk')) {state.frame=frame;paint();}
+    if (state.frame!==frame || (walking && n!==previousTick)) {state.frame=frame;paint();}
     const release=state.meta[1].releaseFrame;
     if(!state.released&&release!==undefined&&n>=release) {
       state.released=true;

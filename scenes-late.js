@@ -37,6 +37,7 @@ export function mountLetter({ root, signal, cats, next, phase }) {
           <button class="late-envelope" type="button" aria-label="Mở phong thư của Bảo" hidden disabled>
             <span class="late-envelope-pocket"></span><span class="late-envelope-flap"></span>
             <span class="late-envelope-seal">♥</span>
+            <span class="late-seal-glints" aria-hidden="true">✦</span>
           </button>
           <button type="button" class="primary late-open" hidden>Mở thư</button>
           <article class="late-paper" aria-labelledby="late-paper-title" hidden>
@@ -56,14 +57,16 @@ export function mountLetter({ root, signal, cats, next, phase }) {
   const status = scene.querySelector('.late-mail-status');
   const proceed = scene.querySelector('.late-continue');
   const motion = new Set();
-  signal.addEventListener('abort', () => motion.forEach(animation => animation.cancel()), { once: true });
+  const cancelMotion = () => motion.forEach(animation => animation.cancel());
+  signal.addEventListener('abort', cancelMotion, { once: true });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) cancelMotion(); }, { signal });
   setBackdrop(scene, 'letter-nook', signal);
   cats.mount(host);
   cats.setWalking(false);
   let drop;
 
   function animate(element, keyframes, options) {
-    if (reducedMotion()) return Promise.resolve();
+    if (document.hidden || reducedMotion()) return Promise.resolve();
     const animation = element.animate(keyframes, options);
     motion.add(animation);
     return animation.finished.catch(() => {}).finally(() => motion.delete(animation));
@@ -111,6 +114,12 @@ export function mountLetter({ root, signal, cats, next, phase }) {
     scene.dataset.letterState = 'opening';
     phase('SCENE_4_LETTER_OPEN');
     const flap = envelope.querySelector('.late-envelope-flap');
+    animate(envelope.querySelector('.late-seal-glints'), [
+      { opacity: 0, transform: 'translate(-50%, -30%) scale(.5)' },
+      { opacity: 1, offset: .25 },
+      { opacity: 1, offset: .73 },
+      { opacity: 0, transform: 'translate(-50%, -155%) scale(1.15)' }
+    ], { duration: 320, easing: 'ease-out' });
     await animate(flap, [{ transform: 'rotateX(0)' }, { transform: 'rotateX(180deg)' }], {
       duration: 320, easing: 'ease-in-out'
     });
@@ -147,6 +156,30 @@ export function mountLetter({ root, signal, cats, next, phase }) {
   releaseLetter().catch(() => {
     if (!signal.aborted) status.textContent = 'Chưa thể mở cảnh lá thư. Hãy tải lại trang.';
   });
+}
+
+// Each ring paints once. Only the two rings and their launch trail move.
+function skyBloom(color, tilt) {
+  function ring(count, offset) {
+    return Array.from({ length: count }, (_, i) => {
+      const angle = i * 360 / count + offset;
+      return `<i style="--angle:${angle}deg;--reach:${48 - i % 3 * 3}%"></i>`;
+    }).join('');
+  }
+  return `<div class="late-salute late-${color}">
+    <span class="late-shell">${ring(18, tilt)}</span>
+    <span class="late-shell late-inner">${ring(10, tilt + 13)}</span>
+  </div>`;
+}
+
+function heartBloom() {
+  const stars = Array.from({ length: 30 }, (_, i) => {
+    const t = i * 2 * Math.PI / 30;
+    const x = 50 + 43 * Math.sin(t) ** 3;
+    const y = 45 - 2.65 * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+    return `<i style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"></i>`;
+  }).join('');
+  return `<div class="late-salute late-finale"><span class="late-heart">${stars}</span></div>`;
 }
 
 export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
@@ -209,29 +242,23 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
   const clockInterval = setInterval(updateClock, 1_000);
   let clearFireworks;
 
-  function fireworks() {
+  function stopFireworks() {
     clearTimeout(clearFireworks);
-    const particles = document.createDocumentFragment();
-    const origins = [[20, 33], [76, 30], [53, 18]];
-    const colors = ['#f8558b', '#ffca54', '#ffe8a2', '#fdf5ea', '#a8db98', '#e298fc'];
-    for (const [burst, [x, y]] of origins.entries()) {
-      for (let ray = 0; ray < 12; ray++) {
-        const particle = document.createElement('i');
-        const angle = ray * Math.PI / 6 + burst * .3;
-        const distance = 58 + ray % 3 * 20;
-        particle.style.left = x + '%';
-        particle.style.top = y + '%';
-        particle.style.setProperty('--spark-x', Math.cos(angle) * distance + 'px');
-        particle.style.setProperty('--spark-y', Math.sin(angle) * distance + 'px');
-        particle.style.setProperty('--spark-color', colors[(ray + burst) % colors.length]);
-        particle.style.animationDelay = burst * .2 + 's';
-        particles.append(particle);
-      }
-    }
-    effects.replaceChildren(particles);
-    clearFireworks = setTimeout(() => effects.replaceChildren(), 1_850);
+    effects.replaceChildren();
   }
 
+  function fireworks() {
+    if (document.hidden || effects.childElementCount) return;
+    const skyHeight = scene.querySelector('.late-heading').offsetTop;
+    const stageTop = scene.querySelector('.late-party-stage').offsetTop;
+    effects.style.setProperty('--sky-height', skyHeight + 'px');
+    effects.style.setProperty('--stage-top', stageTop + 'px');
+    effects.innerHTML = skyBloom('rose', -8) + skyBloom('aqua', 6) + heartBloom();
+    clearFireworks = setTimeout(stopFireworks, reducedMotion() ? 1900 : 3300);
+  }
+
+  document.addEventListener('visibilitychange', () => { if (document.hidden) stopFireworks(); }, { signal });
+  matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', stopFireworks, { signal });
   const review = scene.querySelector('.late-letter-review');
   scene.querySelector('.late-party-envelope').addEventListener('click', () => review.showModal(), {signal});
   scene.querySelector('.late-close-letter').addEventListener('click', () => review.close(), {signal});
@@ -242,7 +269,6 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
   scene.querySelector('.late-replay').addEventListener('click', () => replay(), { signal });
   signal.addEventListener('abort', () => {
     clearInterval(clockInterval);
-    clearTimeout(clearFireworks);
-    effects.replaceChildren();
+    stopFireworks();
   }, { once: true });
 }

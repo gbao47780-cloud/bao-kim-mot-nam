@@ -3,7 +3,7 @@
   "characters": {
     "bao": {
       "idle": {
-        "src": "./cats/bao-idle.webp",
+        "src": "./cats/bao-idle.webp?v=6b533d53d1c5",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -15,7 +15,7 @@
         "loop": true
       },
       "walk": {
-        "src": "./cats/bao-walk.webp",
+        "src": "./cats/bao-walk.webp?v=f1a16bbe376e",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -28,7 +28,7 @@
         "stridePx": 48
       },
       "stop": {
-        "src": "./cats/bao-stop.webp",
+        "src": "./cats/bao-stop.webp?v=f6aac067fbfb",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -40,7 +40,7 @@
         "loop": false
       },
       "sit": {
-        "src": "./cats/bao-sit.webp",
+        "src": "./cats/bao-sit.webp?v=7763c853879f",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -52,7 +52,7 @@
         "loop": false
       },
       "release": {
-        "src": "./cats/bao-release.webp",
+        "src": "./cats/bao-release.webp?v=94eed10a6f44",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -62,10 +62,14 @@
           204
         ],
         "loop": false,
-        "releaseFrame": 14
+        "releaseFrame": 14,
+        "releaseMouth": [
+          186.34,
+          126.36
+        ]
       },
       "lie": {
-        "src": "./cats/bao-lie.webp",
+        "src": "./cats/bao-lie.webp?v=13b626377d98",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -77,7 +81,7 @@
         "loop": false
       },
       "curl": {
-        "src": "./cats/bao-curl.webp",
+        "src": "./cats/bao-curl.webp?v=d46d137d9e66",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -89,7 +93,7 @@
         "loop": false
       },
       "sleep": {
-        "src": "./cats/bao-sleep.webp",
+        "src": "./cats/bao-sleep.webp?v=abe054dd3835",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -103,7 +107,7 @@
     },
     "kim": {
       "idle": {
-        "src": "./cats/kim-idle.webp",
+        "src": "./cats/kim-idle.webp?v=2c2faedb4087",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -115,7 +119,7 @@
         "loop": true
       },
       "walk": {
-        "src": "./cats/kim-walk.webp",
+        "src": "./cats/kim-walk.webp?v=2ac596e66d40",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -128,7 +132,7 @@
         "stridePx": 48
       },
       "stop": {
-        "src": "./cats/kim-stop.webp",
+        "src": "./cats/kim-stop.webp?v=8a57bb74f48b",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -140,7 +144,7 @@
         "loop": false
       },
       "sit": {
-        "src": "./cats/kim-sit.webp",
+        "src": "./cats/kim-sit.webp?v=3cb191727cb1",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -152,7 +156,7 @@
         "loop": false
       },
       "release": {
-        "src": "./cats/kim-release.webp",
+        "src": "./cats/kim-release.webp?v=0eddf98ed480",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -164,7 +168,7 @@
         "loop": false
       },
       "lie": {
-        "src": "./cats/kim-lie.webp",
+        "src": "./cats/kim-lie.webp?v=27b9f43b6b58",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -176,7 +180,7 @@
         "loop": false
       },
       "curl": {
-        "src": "./cats/kim-curl.webp",
+        "src": "./cats/kim-curl.webp?v=94bab94b98be",
         "width": 256,
         "height": 224,
         "columns": 6,
@@ -188,7 +192,7 @@
         "loop": false
       },
       "sleep": {
-        "src": "./cats/kim-sleep.webp",
+        "src": "./cats/kim-sleep.webp?v=c951a09e3a1c",
         "width": 256,
         "height": 224,
         "columns": 6,

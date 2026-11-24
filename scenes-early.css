@@ -247,13 +247,14 @@
   place-items: center;
   position: relative;
   inline-size: min(100%, 620px);
-  min-block-size: clamp(186px, 41svh, 410px);
+  --print-height: clamp(149px, 34svh, 345px);
+  min-block-size: max(min(41svh, 410px), calc(var(--print-height) + 68px));
   padding: 9px 22px;
 }
 .bk-scrapbook .bk-polaroid {
   position: relative;
   z-index: 1;
-  inline-size: min(100%, 445px, calc(20px + var(--photo-ratio, 1.3) * clamp(149px, 34svh, 345px)));
+  inline-size: min(100%, 445px, calc(20px + var(--photo-ratio, 1.3) * var(--print-height)));
   padding: 10px 10px 6px;
   background: #fffdf3;
   box-shadow: 0 10px 20px #5c313326, 0 2px 4px #57314b35;
@@ -400,6 +401,20 @@
   background: linear-gradient(90deg, #d4b394 0%, #fbecd0 6%, #fff9e9 31%, #fff6e2 100%);
   box-shadow: inset -2px -1px 4px #9c795335;
 }
+@media (prefers-reduced-motion: no-preference) {
+  .bk-book-page.bk-turning::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(95deg, #64463260, #e3c89b20 40%, #fffbe84f 75%, transparent);
+    animation: bk-page-light 550ms ease-in-out both;
+  }
+  @keyframes bk-page-light {
+    0%, 100% { opacity: 0; }
+    43% { opacity: 1; }
+  }
+}
 .bk-book-page figure {
   display: grid;
   min-block-size: 0;
@@ -462,3 +477,14 @@
   .bk-hinge, .bk-door-glow, .bk-walk-cats, .bk-book-cover { transition: none; }
 }
 
+
+.bk-photo-tools { display:flex; align-items:center; justify-content:center; gap:6px; }
+.bk-walk .bk-photo-tools { min-height:34px; }
+.bk-photo-tools .bk-photo-count,.bk-photo-tools .bk-page-count { margin:0; }
+.bk-photo-tools .bk-heart,.bk-photo-tools .bk-filter { color:var(--bk-wine); background:#fff8ed; border:1px solid #c68e9166; }
+.bk-photo-tools .bk-heart { position:relative; min-width:36px; height:34px; border-radius:50%; padding:0; font:22px/1 Georgia,serif; }
+.bk-photo-tools .bk-heart::before { content:""; position:absolute; inset:-5px -4px; }
+.bk-heart[aria-pressed=true] { color:#ac3557; }
+.bk-photo-tools .bk-filter { padding:5px 10px; border-radius:20px; font-size:.78rem; font-weight:700; }
+.bk-photo-open,.bk-book-page { touch-action:pan-y pinch-zoom; }
+.bk-photo-open img,.bk-page-media img { -webkit-user-drag:none; user-select:none; }

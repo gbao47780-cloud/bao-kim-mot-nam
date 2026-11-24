@@ -13,6 +13,51 @@ function listen(target, type, callback, signal) {
   target.addEventListener(type, callback, {signal});
 }
 
+const favoritesKey = 'bao-kim-mot-nam:favorites';
+let favorites = new Set();
+try {
+  const saved = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+  if (Array.isArray(saved)) favorites = new Set(saved.filter(id => typeof id === 'string'));
+} catch { /* The hearts still work for this visit if storage is unavailable. */ }
+
+function isFavorite(item) { return favorites.has(item?.id || source(item)); }
+function toggleFavorite(item) {
+  const id = item.id || source(item);
+  if (favorites.has(id)) favorites.delete(id);
+  else favorites.add(id);
+  try { localStorage.setItem(favoritesKey, JSON.stringify([...favorites])); } catch {}
+}
+function syncHeart(button, item, visible) {
+  button.hidden = !visible;
+  const liked = isFavorite(item);
+  button.setAttribute('aria-pressed', String(liked));
+  button.setAttribute('aria-label', liked ? 'Bỏ yêu thích ảnh này' : 'Thả tim cho ảnh này');
+  button.textContent = liked ? '♥' : '♡';
+}
+
+function swipePages(surface, prev, next, signal) {
+  let start, swiped = false;
+  listen(surface, 'pointerdown', e => {
+    swiped = false;
+    start = undefined;
+    if (!e.isPrimary || e.pointerType === 'mouse' || e.target.closest('video')) return;
+    start = {id:e.pointerId, x:e.clientX, y:e.clientY};
+  }, signal);
+  listen(surface, 'pointercancel', () => { start = undefined; }, signal);
+  listen(surface, 'pointerup', e => {
+    if (!start || e.pointerId !== start.id) return;
+    const dx = e.clientX - start.x, dy = e.clientY - start.y;
+    start = undefined;
+    if (Math.abs(dx) < 38 || Math.abs(dx) < 1.6 * Math.abs(dy)) return;
+    swiped = true;
+    const button = dx < 0 ? next : prev;
+    if (!button.disabled && !button.hidden) button.click();
+  }, signal);
+  surface.addEventListener('click', e => {
+    if (swiped && e.detail) { e.preventDefault(); e.stopImmediatePropagation(); swiped = false; }
+  }, {capture:true, signal});
+}
+
 function later(signal) {
   let id;
   const clear = () => clearTimeout(id);
@@ -38,6 +83,34 @@ function photo(item) {
   image.alt = photoAlt(item);
   image.decoding = 'async';
   return image;
+}
+
+// Keep the current print and its neighbors decoded. Large originals are for zoom.
+const prints = new Map();
+function readyPrint(item, priority = 'auto') {
+  const url = item.thumb || source(item);
+  let pending = prints.get(url);
+  if (pending) prints.delete(url);
+  else {
+    const image = photo(item);
+    image.fetchPriority = priority;
+    image.src = url;
+    pending = image.decode().catch(async error => {
+      if (url === source(item)) throw error;
+      image.src = source(item);
+      await image.decode();
+    }).then(() => image);
+    pending.catch(() => { if (prints.get(url) === pending) prints.delete(url); });
+  }
+  prints.set(url, pending);
+  if (prints.size > 3) prints.delete(prints.keys().next().value);
+  return pending;
+}
+
+export function warmPrint(item) {
+  if (source(item) && !videoItem(item) && !document.hidden && !navigator.connection?.saveData) {
+    readyPrint(item, 'low').catch(() => {});
+  }
 }
 
 export function mountDoor(ctx) {
@@ -81,6 +154,7 @@ export function mountDoor(ctx) {
     button.disabled = true;
     stage.classList.add('bk-opening');
     ctx.phase('doorOpen');
+    ctx.warmWalk?.();
     const advance = () => {
       end.clear();
       if (!signal.aborted) ctx.next();
@@ -106,7 +180,7 @@ export function mountWalk(ctx) {
     <section class="bk-early bk-walk" aria-labelledby="bk-walk-title">
       <header class="bk-scene-head">
         <h1 id="bk-walk-title">Con đường ký ức</h1>
-        <p class="bk-photo-count" aria-live="polite"></p>
+        <div class="bk-photo-tools"><p class="bk-photo-count" aria-live="polite"></p><button class="bk-heart" type="button" hidden></button></div>
       </header>
       <div class="bk-scrapbook">
         <span class="bk-sticker bk-sticker-heart" aria-hidden="true">♥</span>
@@ -144,6 +218,7 @@ export function mountWalk(ctx) {
   const caption = find(polaroid, 'figcaption');
   const state = find(root, '.bk-media-state');
   const open = find(root, '.bk-photo-open');
+  const heart = find(root, '.bk-heart');
   const dialog = find(root, '.bk-photo-dialog');
   const large = find(dialog, '.bk-photo-large');
   const prev = find(root, '.bk-prev');
@@ -162,11 +237,12 @@ export function mountWalk(ctx) {
   let finished = false;
   let stopped = false;
   let advanced = false;
-  let image;
+  let request = 0;
   catsAt(ctx, find(root, '.bk-walk-cats'), running ? 'walk' : 'idle');
 
   function sync() {
-    const paused = !running || failed || !loaded || !inView || document.hidden || dialog.open;
+    syncHeart(heart, entries[index], loaded);
+    const paused = !running || failed || !open.firstElementChild || !inView || document.hidden || dialog.open;
     ctx.cats.setPaused(paused && !finished);
     ctx.cats.setWalking(!paused && !finished);
     counter.textContent = valid
@@ -215,37 +291,45 @@ export function mountWalk(ctx) {
     }
   }
 
-  function show(position) {
+  async function show(position) {
+    const version = ++request;
     index = position;
     loaded = false;
     failed = false;
     open.disabled = true;
-    polaroid.hidden = false;
-    state.textContent = 'Đang tải ảnh…';
-    const item = entries[index];
-    const current = image = photo(item);
-    open.replaceChildren(current);
-    caption.textContent = [item.dateLabel || item.date, item.caption].filter(Boolean).join(' · ');
-    trail.dataset.progress = String(index / (PHOTO_COUNT - 1));
-    listen(current, 'load', () => {
-      if (image !== current || !current.naturalWidth) return;
-      polaroid.style.setProperty('--photo-ratio', current.naturalWidth / current.naturalHeight);
+    state.textContent = open.firstElementChild ? '' : 'Đang tải ảnh…';
+    schedule();
+    const item = entries[position];
+    try {
+      const image = await readyPrint(item, 'high');
+      if (signal.aborted || version !== request) return;
+      image.alt = photoAlt(item);
+      polaroid.style.setProperty('--photo-ratio', image.naturalWidth / image.naturalHeight);
+      if (open.firstElementChild && !motion()) {
+        image.animate([{opacity: .86}, {opacity: 1}], {duration: 180, easing: 'ease-out'});
+      }
+      open.replaceChildren(image);
+      polaroid.hidden = false;
+      caption.textContent = [item.dateLabel || item.date, item.caption].filter(Boolean).join(' · ');
+      trail.dataset.progress = String(position / (PHOTO_COUNT - 1));
       loaded = true;
       open.disabled = false;
       state.textContent = '';
-      schedule();
-    }, signal);
-    listen(current, 'error', () => {
-      if (image !== current) return;
+      warmPrint(entries[position + 1]);
+    } catch {
+      if (signal.aborted || version !== request) return;
       failed = true;
       running = false;
       polaroid.hidden = true;
       state.textContent = 'Ảnh này hiện không tải được từ nguồn kỷ niệm.';
-      schedule();
-    }, signal);
-    current.src = source(item);
+    }
     schedule();
   }
+
+  swipePages(open, prev, next, signal);
+  listen(heart, 'click', () => {
+    if (loaded) { toggleFavorite(entries[index]); sync(); }
+  }, signal);
 
   const observer = new IntersectionObserver(([entry]) => {
     inView = entry.intersectionRatio >= 0.5;
@@ -265,25 +349,30 @@ export function mountWalk(ctx) {
   listen(prev, 'click', () => show(index - 1), signal);
   listen(next, 'click', () => show(index + 1), signal);
   listen(retry, 'click', () => show(index), signal);
-  listen(open, 'click', () => {
+  let zoomRequest = 0;
+  listen(open, 'click', async () => {
+    const version = ++zoomRequest;
     const item = entries[index];
-    const full = photo(item);
-    const url = item.full || item.fullSrc || source(item);
-    large.replaceChildren(full);
+    large.replaceChildren(open.firstElementChild.cloneNode());
     find(dialog, 'figcaption').textContent = caption.textContent;
-    listen(full, 'error', () => {
-      if (full.getAttribute('src') !== source(item)) full.src = source(item);
-      else large.textContent = 'Ảnh lớn hiện không tải được.';
-    }, signal);
-    full.src = url;
     dialog.showModal();
     schedule();
+    const full = photo(item);
+    full.src = item.full || item.fullSrc || source(item);
+    try {
+      await full.decode();
+      if (!signal.aborted && dialog.open && version === zoomRequest) large.replaceChildren(full);
+    } catch {
+      // The decoded print remains available when the original cannot be fetched.
+    }
   }, signal);
   listen(find(dialog, '.bk-photo-close'), 'click', () => dialog.close(), signal);
   listen(dialog, 'click', event => {
     if (event.target === dialog) dialog.close();
   }, signal);
   listen(dialog, 'close', () => {
+    zoomRequest++;
+    large.replaceChildren();
     schedule();
     open.focus();
   }, signal);
@@ -303,12 +392,16 @@ export function mountWalk(ctx) {
 
 export function mountAlbum(ctx) {
   const {root, signal} = ctx;
-  const pages = ctx.memories.album ?? [];
+  const allPages = ctx.memories.album ?? [];
+  let pages = allPages;
+  let favoritesOnly = false;
+  warmPrint(pages[0]);
   root.innerHTML = `
     <section class="bk-early bk-album" aria-labelledby="bk-album-title">
       <header class="bk-scene-head">
         <h1 id="bk-album-title">Album của hai đứa</h1>
-        <p class="bk-page-count" aria-live="polite"></p>
+        <div class="bk-photo-tools"><p class="bk-page-count" aria-live="polite"></p><button class="bk-heart" type="button" hidden></button>
+          <button type="button" class="bk-filter" aria-pressed="false" hidden>Ảnh đã thích</button></div>
       </header>
       <div class="bk-album-stage">
         <div class="bk-book">
@@ -336,6 +429,8 @@ export function mountAlbum(ctx) {
   const media = find(root, '.bk-page-media');
   const caption = find(page, 'figcaption');
   const counter = find(root, '.bk-page-count');
+  const heart = find(root, '.bk-heart');
+  const filter = find(root, '.bk-filter');
   const state = find(root, '.bk-media-state');
   const open = find(root, '.bk-album-open');
   const prev = find(root, '.bk-prev');
@@ -377,6 +472,11 @@ export function mountAlbum(ctx) {
   }
 
   function sync() {
+    syncHeart(heart, pages[index], opened && !turning && ready && !videoItem(pages[index]));
+    filter.hidden = !ctx.review || !opened || !allPages.some(isFavorite);
+    filter.disabled = turning;
+    filter.setAttribute('aria-pressed', String(favoritesOnly));
+    filter.textContent = favoritesOnly ? 'Toàn bộ album' : 'Ảnh đã thích';
     counter.textContent = opened && pages.length ? 'Trang ' + (index + 1) + ' / ' + pages.length : '';
     prev.hidden = auto.hidden = next.hidden = !opened || pages.length < 2;
     prev.disabled = turning || index === 0;
@@ -396,16 +496,19 @@ export function mountAlbum(ctx) {
     timer.set(() => turn(1), ALBUM_INTERVAL);
   }
 
-  function draw() {
+  let pageRequest = 0;
+  async function draw() {
+    const version = ++pageRequest;
     stopVideo();
     current = undefined;
-    media.replaceChildren();
     ready = false;
     failed = false;
     const item = pages[index];
-    caption.textContent = [item?.dateLabel || item?.date, item?.caption].filter(Boolean).join(' · ');
+    const pageCaption = [item?.dateLabel || item?.date, item?.caption].filter(Boolean).join(' · ');
     state.textContent = '';
     if (!source(item)) {
+      media.replaceChildren();
+      caption.textContent = pageCaption;
       failed = true;
       running = false;
       state.textContent = pages.length
@@ -414,37 +517,54 @@ export function mountAlbum(ctx) {
       schedule();
       return;
     }
-    const isVideo = videoItem(item);
-    const element = current = isVideo ? document.createElement('video') : photo(item);
-    if (isVideo) {
-      element.controls = true;
-      element.preload = 'auto';
-      element.playsInline = true;
-      element.setAttribute('aria-label', item.caption || 'Video kỷ niệm');
-      if (item.poster) element.poster = item.poster;
-      for (const event of ['play', 'pause', 'ended']) listen(element, event, schedule, signal);
-    }
-    state.textContent = isVideo ? 'Đang tải video…' : 'Đang tải ảnh…';
-    media.append(element);
-    listen(element, isVideo ? 'loadeddata' : 'load', () => {
-      if (current !== element) return;
-      state.textContent = '';
+    function shown() {
       ready = true;
+      state.textContent = '';
       seen.add(index);
+      warmPrint(pages[index + 1]);
       schedule();
-    }, signal);
-    listen(element, 'error', () => {
-      if (current !== element) return;
-      element.remove();
+    }
+
+    const isVideo = videoItem(item);
+    function unavailable() {
+      if (signal.aborted || version !== pageRequest) return;
+      media.replaceChildren();
+      caption.textContent = pageCaption;
       ready = false;
       seen.delete(index);
       failed = true;
       running = false;
       state.textContent = isVideo ? 'Video này hiện không phát được.' : 'Ảnh này hiện không tải được.';
       schedule();
-    }, signal);
-    element.src = source(item);
+    }
+
     schedule();
+    if (!isVideo) {
+      try {
+        const image = await readyPrint(item, 'high');
+        if (signal.aborted || version !== pageRequest) return;
+        current = image;
+        image.alt = photoAlt(item);
+        media.replaceChildren(image);
+        caption.textContent = pageCaption;
+        shown();
+      } catch { unavailable(); }
+      return;
+    }
+
+    const video = current = document.createElement('video');
+    video.controls = true;
+    video.preload = 'auto';
+    video.playsInline = true;
+    video.setAttribute('aria-label', item.caption || 'Video kỷ niệm');
+    if (item.poster) video.poster = item.poster;
+    for (const event of ['play', 'pause', 'ended']) listen(video, event, schedule, signal);
+    listen(video, 'loadeddata', () => { if (current === video) shown(); }, signal);
+    listen(video, 'error', unavailable, signal);
+    state.textContent = 'Đang tải video…';
+    media.replaceChildren(video);
+    caption.textContent = pageCaption;
+    video.src = source(item);
   }
 
   function turn(direction) {
@@ -458,9 +578,11 @@ export function mountAlbum(ctx) {
       return;
     }
     turning = true;
+    page.classList.add('bk-turning');
     sync();
     animation = window.gsap.timeline({
       onComplete: () => {
+        page.classList.remove('bk-turning');
         turning = false;
         schedule();
       }
@@ -470,6 +592,25 @@ export function mountAlbum(ctx) {
       .to(page, {rotationY: 0, duration: .32, ease: 'power2.out', clearProps: 'transform'});
   }
 
+  swipePages(page, prev, next, signal);
+  function selectPages(onlyLiked, preferred) {
+    favoritesOnly = onlyLiked;
+    pages = favoritesOnly ? allPages.filter(isFavorite) : allPages;
+    if (!pages.length) { pages = allPages; favoritesOnly = false; }
+    const at = pages.indexOf(preferred);
+    index = at >= 0 ? at : Math.max(0, Math.min(index, pages.length - 1));
+    running = false;
+    seen.clear();
+    draw();
+  }
+  listen(filter, 'click', () => selectPages(!favoritesOnly, pages[index]), signal);
+  listen(heart, 'click', () => {
+    if (!ready || turning) return;
+    const item = pages[index];
+    toggleFavorite(item);
+    if (favoritesOnly) selectPages(true, item);
+    else sync();
+  }, signal);
   listen(cover, 'click', () => open.click(), signal);
   listen(open, 'click', () => {
     if (opened) return;
