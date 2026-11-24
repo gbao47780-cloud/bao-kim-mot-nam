@@ -38,3 +38,14 @@ body{height:100vh;height:100dvh;min-height:0}#scene{grid-template-rows:minmax(0,
  .late-letter[data-letter-state="reading"] .late-paper-copy{flex:1}
 }
 @media(min-width:761px){.bk-cover-copy::after{content:"";position:absolute;pointer-events:none;width:clamp(65px,7.2vw,124px);aspect-ratio:1;right:-2%;bottom:-7%;background:url('./art/roses.webp') center/contain no-repeat;transform:rotate(14deg);opacity:.93}}
+
+.late-cake-touch{position:absolute;inset:0;width:100%;height:100%;z-index:3;border:0;background:transparent;border-radius:15%}
+.late-party-stage .late-keepsakes{right:26%;bottom:25%;transform:none;z-index:4}
+.late-keepsakes .late-party-envelope{width:clamp(44px,5vw,74px);height:44px;background:transparent url('./art/envelope.webp') center/90% auto no-repeat;border:0;box-shadow:none}
+.late-keepsakes .late-polaroid{display:none}
+.late-letter-review[open]{display:flex;flex-direction:column;gap:12px;width:min(90vw,490px);max-height:82dvh;padding:clamp(20px,5vw,36px);border:1px solid #b98e75;border-radius:12px;color:var(--ink);background:#fff7e9}
+.late-letter-review .letter-scroll{min-height:0;overflow:auto;line-height:1.65}
+.late-letter-review h2{color:var(--wine);font-family:var(--serif)}
+.late-letter-review .late-close-letter{align-self:flex-end;flex:none}
+.late-party-envelope:focus-visible,.late-cake-touch:focus-visible{outline:3px solid var(--wine)}
+.late-envelope{padding:0;border:0}

@@ -137,6 +137,8 @@ export function mountWalk(ctx) {
       </dialog>
     </section>`;
   const trail = find(root, '.bk-trail');
+  trail.dataset.step = String(1 / (PHOTO_COUNT - 1));
+  trail.dataset.interval = String(WALK_INTERVAL / 1000);
   const polaroid = find(root, '.bk-polaroid');
   const counter = find(root, '.bk-photo-count');
   const caption = find(polaroid, 'figcaption');
@@ -224,9 +226,10 @@ export function mountWalk(ctx) {
     const current = image = photo(item);
     open.replaceChildren(current);
     caption.textContent = [item.dateLabel || item.date, item.caption].filter(Boolean).join(' · ');
-    trail.style.setProperty('--bk-progress', index / (PHOTO_COUNT - 1));
+    trail.dataset.progress = String(index / (PHOTO_COUNT - 1));
     listen(current, 'load', () => {
       if (image !== current || !current.naturalWidth) return;
+      polaroid.style.setProperty('--photo-ratio', current.naturalWidth / current.naturalHeight);
       loaded = true;
       open.disabled = false;
       state.textContent = '';
@@ -313,7 +316,7 @@ export function mountAlbum(ctx) {
             <figure><div class="bk-page-media"></div><figcaption></figcaption></figure>
             <p class="bk-media-state" role="status"></p>
           </div>
-          <div class="bk-book-cover" aria-hidden="true"><span>♥</span><em>Bảo &amp; Kim</em><small>23.11.2025 — 23.11.2026</small></div>
+          <button type="button" class="bk-book-cover" aria-label="Mở bìa album hoa hồng"></button>
         </div>
         <div class="bk-album-cats"></div>
       </div>
@@ -467,6 +470,7 @@ export function mountAlbum(ctx) {
       .to(page, {rotationY: 0, duration: .32, ease: 'power2.out', clearProps: 'transform'});
   }
 
+  listen(cover, 'click', () => open.click(), signal);
   listen(open, 'click', () => {
     if (opened) return;
     opened = true;

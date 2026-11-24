@@ -1,3 +1,8 @@
+const LETTER_BODY = `<p>Một năm bên nhau rồi. Bảo muốn viết cho Kim vài dòng, để nói một điều thật giản dị là Bảo rất vui vì có Kim trong cuộc đời mình.</p>
+            <p>Cảm ơn Kim vì đã cùng Bảo đi qua năm đầu tiên này. Bảo mong tụi mình vẫn dành thời gian lắng nghe nhau, nói cho nhau biết mình cần gì, và dịu dàng với nhau cả những lúc chẳng biết phải nói gì.</p>
+            <p>Bảo háo hức nghĩ đến những điều tụi mình còn có thể làm cùng nhau. Cứ từ từ thôi, mình còn nhiều ngày để thương nhau.</p>
+            <p class="late-signature">Thương Kim,<br><strong>Bảo</strong></p>`;
+
 const ANNIVERSARY = Date.parse('2025-11-23T00:00:00+07:00');
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -29,17 +34,14 @@ export function mountLetter({ root, signal, cats, next, phase }) {
         </div>
         <div class="late-mail">
           <p class="late-mail-status" role="status">Bảo mang thư đến cho Kim.</p>
-          <div class="late-envelope" hidden aria-hidden="true">
+          <button class="late-envelope" type="button" aria-label="Mở phong thư của Bảo" hidden disabled>
             <span class="late-envelope-pocket"></span><span class="late-envelope-flap"></span>
             <span class="late-envelope-seal">♥</span>
-          </div>
+          </button>
           <button type="button" class="primary late-open" hidden>Mở thư</button>
           <article class="late-paper" aria-labelledby="late-paper-title" hidden>
             <div class="late-paper-copy" tabindex="0" aria-label="Nội dung thư"><h2 id="late-paper-title" tabindex="-1">Kim thương,</h2>
-            <p>Một năm bên nhau rồi. Bảo muốn viết cho Kim vài dòng, để nói một điều thật giản dị là Bảo rất vui vì có Kim trong cuộc đời mình.</p>
-            <p>Cảm ơn Kim vì đã cùng Bảo đi qua năm đầu tiên này. Bảo mong tụi mình vẫn dành thời gian lắng nghe nhau, nói cho nhau biết mình cần gì, và dịu dàng với nhau cả những lúc chẳng biết phải nói gì.</p>
-            <p>Bảo háo hức nghĩ đến những điều tụi mình còn có thể làm cùng nhau. Cứ từ từ thôi, mình còn nhiều ngày để thương nhau.</p>
-            <p class="late-signature">Thương Kim,<br><strong>Bảo</strong></p></div>
+            ${LETTER_BODY}</div>
             <button type="button" class="primary late-continue">Đọc xong rồi · Tiếp tục</button>
           </article>
         </div>
@@ -99,9 +101,12 @@ export function mountLetter({ root, signal, cats, next, phase }) {
     if (signal.aborted) return;
     scene.dataset.letterState = 'ready';
     open.hidden = false;
+    envelope.disabled = false;
   }
 
+  envelope.addEventListener('click', () => open.click(), {signal});
   open.addEventListener('click', async () => {
+    envelope.disabled = true;
     open.disabled = true;
     scene.dataset.letterState = 'opening';
     phase('SCENE_4_LETTER_OPEN');
@@ -163,7 +168,8 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
         </div>
         <span class="late-sprig late-sprig-left" aria-hidden="true">✿</span>
         <span class="late-sprig late-sprig-right" aria-hidden="true">✿</span>
-        <div class="late-dessert" role="img" aria-label="Bánh kỷ niệm với nến, kem hồng và dâu">
+        <div class="late-dessert">
+          <button type="button" class="late-cake-touch" aria-label="Chạm bánh kem để thắp pháo hoa"></button>
           <div class="late-plate"></div>
           <div class="late-cake">
             <div class="late-icing"></div>
@@ -172,8 +178,8 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
             <div class="late-cake-mark">1</div>
           </div>
         </div>
-        <div class="late-keepsakes" aria-hidden="true">
-          <span class="late-party-envelope">♥</span>
+        <div class="late-keepsakes">
+          <button type="button" class="late-party-envelope" aria-label="Đọc lại thư của Bảo"></button>
           <span class="late-polaroid"><span>♥</span></span>
         </div>
         <button type="button" class="late-table-album" aria-label="Mở lại album kỷ niệm">
@@ -184,6 +190,7 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
         <button type="button" class="secondary late-firework-button">Thắp pháo hoa</button>
         <button type="button" class="primary late-replay">Xem lại từ đầu</button>
       </div>
+      <dialog class="late-letter-review" aria-label="Thư của Bảo gửi Kim"><div class="letter-scroll"><h2>Kim thương,</h2>${LETTER_BODY}</div><button type="button" class="secondary late-close-letter">Đóng thư</button></dialog>
       <div class="late-fireworks" aria-hidden="true"></div>
     </section>`;
 
@@ -225,6 +232,11 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
     clearFireworks = setTimeout(() => effects.replaceChildren(), 1_850);
   }
 
+  const review = scene.querySelector('.late-letter-review');
+  scene.querySelector('.late-party-envelope').addEventListener('click', () => review.showModal(), {signal});
+  scene.querySelector('.late-close-letter').addEventListener('click', () => review.close(), {signal});
+  review.addEventListener('click', e => {if(e.target === review) review.close();}, {signal});
+  scene.querySelector('.late-cake-touch').addEventListener('click', fireworks, {signal});
   scene.querySelector('.late-firework-button').addEventListener('click', fireworks, { signal });
   scene.querySelector('.late-table-album').addEventListener('click', () => reviewAlbum(), { signal });
   scene.querySelector('.late-replay').addEventListener('click', () => replay(), { signal });

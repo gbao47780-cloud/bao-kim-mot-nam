@@ -20,6 +20,7 @@ export async function createCats(container) {
     return promise;
   }
   let state, ticket=0, raf=0, previousTime=null, paused=false, walking=false, distance=0, destroyed=false;
+  let lanePosition=0, lastPhoto=null;
   let width=0,height=0,dpr=1, mouth=null;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   function resize() {
@@ -35,14 +36,18 @@ export async function createCats(container) {
     const snuggle=name==='sleep'?1:name==='curl'?frame/23:0;
     const separation=153-82*snuggle;
     const trail=container.closest('.bk-trail');
-    const scale=Math.min(height*.97/157,width*.95/(187+separation));
-    const ground=height*.965;
+    const scale=Math.min(height*.97/157,width*(trail ? .56 : .95)/(187+separation));
+    const ground=height*.94;
     let x=width/2;
     if(trail){
-      const maxPan=Math.max(0,(width-(187+separation)*scale)*.70);
-      const shift=Math.min(distance*scale,maxPan);
-      x+=shift-maxPan/2;
-      trail.style.setProperty('--travel',-(distance*scale-shift)+'px');
+      const progress=Number(trail.dataset.progress || 0);
+      if(reduced.matches || (paused && progress!==lastPhoto)) lanePosition=progress;
+      lastPhoto=progress;
+      const margin = Math.max(5, width * .015);
+      const travel = Math.max(0,width - 2*margin - (187+separation)*scale);
+      const shift = travel * lanePosition;
+      x += shift - travel/2;
+      trail.style.setProperty('--travel',(shift-distance*scale)+'px');
     }
     ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
     for(let i=0;i<2;i++) {
@@ -54,7 +59,7 @@ export async function createCats(container) {
       const left=anchorX-(tile.anchor[0]-(rect.offsetX||0))*scale;
       const top=anchorY-(tile.anchor[1]-(rect.offsetY||0))*scale;
       ctx.drawImage(bitmap,rect.x,rect.y,rect.w,rect.h,left,top,rect.w*scale,rect.h*scale);
-      if(i===1)mouth={x:left+165*scale,y:top+140*scale};
+      if(i===1)mouth={x:left+181*scale,y:top+135*scale};
     }
     canvas.dataset.frame=String(frame);canvas.dataset.clip=name;
   }
@@ -66,6 +71,14 @@ export async function createCats(container) {
     if(!state||paused||document.hidden||destroyed||!container.isConnected){previousTime=null;return;}
     const delta=previousTime===null?0:(now-previousTime)/1000;previousTime=now;
     state.elapsed+=delta;
+    const lane = container.closest('.bk-trail');
+    if (lane) {
+      const step = Number(lane.dataset.step);
+      const target = Math.min(1, Number(lane.dataset.progress || 0) + (walking ? step : 0));
+      const rate = step / Number(lane.dataset.interval);
+      const remaining = target-lanePosition;
+      lanePosition += Math.sign(remaining)*Math.min(Math.abs(remaining),rate*delta);
+    }
     const count=state.meta[1].count, n=Math.floor(state.elapsed*fps);
     const actual=state.loop?n%count:Math.min(count-1,n);
     if (state.name==='walk' && walking) distance+=delta*(state.meta[1].stridePx||0);
@@ -96,12 +109,13 @@ export async function createCats(container) {
       state?.resolve();
       const loop=opts.loop??meta[1].loop;
       let done;const completion=new Promise(r=>{done=r;});
+      if(!container.closest('.bk-trail')){lanePosition=0;lastPhoto=null;}
       if(name==='walk'&&state?.name!=='walk')distance=0;
       state={name,meta,images,loop,resolve:done,elapsed:0,frame:0,finished:false,released:false,onRelease:opts.onRelease,baseDistance:distance};
       resize();refresh();
       if(!loop)await completion;
     },
-    setPaused(value){if(paused!==value){paused=value;refresh();}},
+    setPaused(value){if(paused!==value){paused=value;refresh();}else if(value || reduced.matches){paint();}},
     setWalking(value){walking=value;},
     destroy(){destroyed=true;ticket++;cancelAnimationFrame(raf);observer.disconnect();document.removeEventListener('visibilitychange',refresh);reduced.removeEventListener('change',refresh);state?.resolve();cache.clear();canvas.remove();}
   };
