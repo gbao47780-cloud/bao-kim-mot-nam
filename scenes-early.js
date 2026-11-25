@@ -1,7 +1,7 @@
 const PHOTO_COUNT = 18;
-const WALK_INTERVAL = 3200;
+const WALK_INTERVAL = 2800;
 const PHOTO_DWELL = 550;
-const ALBUM_INTERVAL = 5200;
+const ALBUM_INTERVAL = 4600;
 const motion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const find = (root, selector) => root.querySelector(selector);
 const source = item => item?.src || item?.full || item?.url || item?.image || '';
