@@ -182,7 +182,7 @@ function heartBloom() {
   return `<div class="late-salute late-finale"><span class="late-heart">${stars}</span></div>`;
 }
 
-export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
+export function mountParty({ root, signal, cats, phase, reviewAlbum, replay, memories }) {
   root.innerHTML = `
     <section class="late-scene late-party" aria-labelledby="late-party-title">
       <div class="late-bunting" aria-hidden="true">${'<i></i>'.repeat(10)}</div>
@@ -216,7 +216,7 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
           <span class="late-polaroid"><span>♥</span></span>
         </div>
         <button type="button" class="late-table-album" aria-label="Mở lại album kỷ niệm">
-          <span class="late-book-cover"><span aria-hidden="true">✦</span><strong>Album<br>kỷ niệm</strong><small>Bảo &amp; Kim</small></span>
+          <span class="late-cover-window" aria-hidden="true"></span>
         </button>
       </div>
       <div class="late-party-actions">
@@ -265,6 +265,11 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay }) {
   review.addEventListener('click', e => {if(e.target === review) review.close();}, {signal});
   scene.querySelector('.late-cake-touch').addEventListener('click', fireworks, {signal});
   scene.querySelector('.late-firework-button').addEventListener('click', fireworks, { signal });
+  const coverPortrait = memories?.album?.find(item => item.id === 'memory-2026-11-16-01') || memories?.album?.[0];
+  if (coverPortrait?.thumb) {
+    const image = new Image(); image.alt = ''; image.src = coverPortrait.thumb;
+    scene.querySelector('.late-cover-window').append(image);
+  }
   scene.querySelector('.late-table-album').addEventListener('click', () => reviewAlbum(), { signal });
   scene.querySelector('.late-replay').addEventListener('click', () => replay(), { signal });
   signal.addEventListener('abort', () => {

@@ -390,56 +390,72 @@ export function mountWalk(ctx) {
   }
 }
 
-const albumNotes = {
-  '2025-11-23': 'Bó hoa hồng hôm ấy đã nằm gọn trong ảnh. Còn cái ôm của Kim, Bảo vẫn nhớ.',
-  '2026-02-09': 'Chiếc quạt đỏ che gần hết mặt rồi. May mà hai đứa vẫn kịp nhìn nhau cười.',
-  '2026-02-28': 'Một trái tim xanh vừa đủ chỗ cho hai đứa mình.',
-  '2026-04-18': 'Kim ơi, hôm ấy sau lưng mình có bao nhiêu ngôi sao nhỉ? Bảo mải nhìn Kim nên quên đếm.',
-  '2026-08-08': 'Bảo thích tấm hình này vì có Kim ngay bên cạnh. Mình cứ giữ nó ở đây nhé.',
-  '2026-08-29': 'Cho Bảo ghé lại gần Kim thêm chút nữa, vừa đủ để hai đứa cùng lọt vào một tấm hình.',
-  '2026-10-24': 'Mấy tấm ảnh cầm vừa trong tay. Bảo muốn giữ chúng để sau này còn ngồi xem cùng Kim.',
-  '2026-11-16': 'Kim hỏi Bảo thích tấm nào nhất à? Khó quá, tấm nào cũng là Kim mà.'
-};
+const bookTitle = '365 Ngày Nắng Trong Mắt Nhau';
+const dedication = 'Thời gian vốn vội vã, nhưng từ ngày có em, từng khoảnh khắc đều hóa thành hình hài rõ nét. Cảm ơn em vì một năm dịu dàng đến thế.';
 
-function albumDays(items) {
+function memoryDate(item) {
+  const iso = [item.date, item.id, source(item)].join(' ').match(/\d{4}-\d{2}-\d{2}/)?.[0];
+  return iso ? iso.split('-').reverse().join('.') : item.caption || '';
+}
+
+function favoritePages(items) {
   const groups = new Map();
   for (const item of items) {
-    const iso = [item.date, item.id, item.src].map(value => String(value || '').match(/\d{4}-\d{2}-\d{2}/)?.[0]).find(Boolean);
-    const caption = (item.dateLabel || item.caption || '').replace(/^Video\s*·\s*/i, '');
-    const key = iso || caption || source(item);
-    if (!groups.has(key)) groups.set(key, {
-      key, date: iso ? iso.split('-').reverse().join('.') : caption,
-      note: albumNotes[iso] || 'Bảo giữ khoảnh khắc này cho hai đứa mình.', items: []
-    });
-    groups.get(key).items.push(item);
-  }
-  // Open the anniversary with the portrait of both of them holding the bouquet.
-  const firstDay = groups.get('2025-11-23');
-  if (firstDay) {
-    const portrait = firstDay.items.findIndex(item => item.id === 'memory-2025-11-23-04');
-    if (portrait > 0) firstDay.items.unshift(firstDay.items.splice(portrait,1)[0]);
+    const date = memoryDate(item);
+    if (!groups.has(date)) groups.set(date, {key:date, date, items:[]});
+    groups.get(date).items.push(item);
   }
   return [...groups.values()];
+}
+
+function anniversaryPages(items) {
+  const byId = new Map(items.map(item => [item.id, item]));
+  const pictures = (date, ...numbers) => (numbers.length ? numbers : [0]).map(n =>
+    byId.get('memory-' + date + (n ? '-' + String(n).padStart(2,'0') : ''))).filter(Boolean);
+  const nov = (...n) => pictures('2026-11-16', ...n);
+  const first = (...n) => pictures('2025-11-23', ...n);
+  const oct = (...n) => pictures('2026-10-24', ...n);
+  const pages = [
+    {layout:'lining', items:[]},
+    {layout:'intro', note:dedication, items:[]},
+    {layout:'polaroids', items:first(1,2,3,4), note:'Tám khung hình đầu tiên, tám nhịp tim còn nguyên bỡ ngỡ — ngày thế giới của anh chính thức có thêm một bầu trời để thương.'},
+    {layout:'film', items:first(5,6,7,8), title:'Ngày Gió Bắt Đầu Mang Tên Em', note:'Chẳng cần lời hứa xa xôi, chỉ cần ánh mắt em dừng lại nơi anh là đủ cho một khởi đầu đẹp nhất.'},
+    {layout:'postcards', items:pictures('2026-02-09',1,2), title:'Chớm Xuân & Nắng Tháng Hai', note:'Mùa xuân đầu tiên đi cạnh nhau, nụ cười em còn rạng rỡ hơn cả nắng tháng Hai.'},
+    {layout:'quiet', items:pictures('2026-02-28'), note:'Hạnh phúc hóa ra giản dị lắm: là khi hai bàn tay tự nhiên tìm thấy nhau giữa những ngày cuối tháng.'},
+    {layout:'layers', items:pictures('2026-04-18',1,2), note:'Tháng Tư đổ nắng vàng lên phố, còn em mang dịu dàng phủ kín lòng anh.'},
+    {layout:'diagonal', items:[...pictures('2026-08-08'),...pictures('2026-08-29')], title:'Nắng Hạ & Khúc Giao Mùa', note:'Từ hạ rực rỡ sang gió cuối tháng Tám, tình yêu mình không ồn ào, chỉ lặng lẽ bén rễ sâu hơn.'},
+    {layout:'autumn-left', items:oct(1,2), title:'Gió Thu Tháng Mười', note:'Tháng Mười se lạnh đầu mùa, nhưng tay em vẫn ấm. Mùa thu đẹp nhất là mùa thu có em trong từng khung hình.'},
+    {layout:'autumn-right', items:oct(3), center:oct(2)[0]},
+    {layout:'magazine', items:nov(1,2,3), title:'Trọn Vẹn 365 Ngày'},
+    {layout:'magazine-reverse', items:nov(4,5,6), note:'365 ngày nhìn lại, từng nụ cười giòn tan nơi đây đều nhắc anh rằng: được thương em là may mắn lớn nhất.'},
+    {layout:'closing', items:nov(7,8), note:'Khép lại năm đầu tiên để mở ra thật nhiều mùa xuân, mùa thu và những cuốn album tiếp theo mang tên chúng mình.'},
+    {layout:'bleed', items:nov(9), date:'23.11.2025 — 23.11.2026'}
+  ];
+  const photos = pages.flatMap(page => page.items);
+  if (photos.length !== 27 || new Set(photos).size !== items.length) return favoritePages(items);
+  return pages.map((page, number) => ({number, key:'page-' + number,
+    date:page.items.length ? memoryDate(page.items[0]) : '', ...page}));
 }
 
 export function mountAlbum(ctx) {
   const {root, signal} = ctx;
   const all = ctx.memories.album ?? [];
-  let days = albumDays(all), offset = 0, likedOnly = false;
+  let days = anniversaryPages(all), offset = 0, likedOnly = false;
   let opened = false, ready = false, running = false, failed = false, advanced = false;
+  let turning = false;
   let generation = 0, viewerDay, viewerIndex = 0, viewerGeneration = 0;
   const seen = new Set(), timer = later(signal), opening = later(signal);
   warmPrint(all[0]);
 
   root.innerHTML = `
     <section class="bk-early bk-album" aria-labelledby="bk-album-title">
-      <header class="bk-scene-head"><h1 id="bk-album-title">Album của hai đứa</h1>
+      <header class="bk-scene-head"><h1 id="bk-album-title">${bookTitle}</h1>
         <div class="bk-photo-tools"><p class="bk-page-count" aria-live="polite"></p>
           <button type="button" class="bk-filter" aria-pressed="false" hidden>Ảnh đã thích</button></div></header>
       <div class="bk-album-stage">
         <div class="bk-book">
           <div class="bk-book-page" hidden></div>
-          <button type="button" class="bk-book-cover" aria-label="Mở bìa album hoa hồng"></button>
+          <button type="button" class="bk-book-cover" aria-label="Mở album 365 Ngày Nắng Trong Mắt Nhau"><span class="bk-cloth-title">23.11.2025 — Một Vòng Tròn Yêu Thương</span><span class="bk-cover-window"></span></button>
         </div>
         <div class="bk-album-cats"></div>
       </div>
@@ -453,6 +469,9 @@ export function mountAlbum(ctx) {
         <button type="button" class="primary bk-continue" hidden>Đọc thư của Bảo</button>
         <button type="button" class="secondary bk-review-close" ${ctx.review ? '' : 'hidden'}>Đóng album</button>
       </div>
+      <dialog class="bk-note-dialog" aria-label="Lời nhắn trong album">
+        <h2></h2><p></p><button type="button" class="secondary">Đóng ×</button>
+      </dialog>
       <dialog class="bk-photo-dialog bk-album-viewer" aria-label="Kỷ niệm trong album">
         <div class="bk-viewer-head"><p class="bk-viewer-date"></p><button type="button" class="secondary bk-photo-close" autofocus>Đóng ×</button></div>
         <div class="bk-photo-large"></div>
@@ -467,6 +486,15 @@ export function mountAlbum(ctx) {
   const filter = q('.bk-filter'), proceed = q('.bk-continue'), retry = q('.bk-retry'), status = q('.bk-media-state');
   const viewer = q('.bk-album-viewer'), large = q('.bk-photo-large'), heart = q('.bk-heart');
   const viewPrev = q('.bk-view-prev'), viewNext = q('.bk-view-next');
+  const portrait = all.find(item => item.id === 'memory-2026-11-16-01') || all[0];
+  if (portrait?.thumb) {
+    const image = photo(portrait); image.src = portrait.thumb;
+    cover.querySelector('.bk-cover-window').append(image);
+  }
+  const noteDialog = q('.bk-note-dialog');
+  listen(find(noteDialog,'button'),'click',() => noteDialog.close(),signal);
+  listen(noteDialog,'close',sync,signal);
+  listen(noteDialog,'cancel',e => e.stopPropagation(),signal);
   if (ctx.review) q('.bk-album-cats').hidden = true;
   else {
     ctx.cats.mount(q('.bk-album-cats'));
@@ -475,20 +503,22 @@ export function mountAlbum(ctx) {
   }
   function sync() {
     const last = Math.min(offset + 2, days.length);
-    const range = last === offset + 1 ? String(last) : (offset + 1) + '–' + last;
-    q('.bk-page-count').textContent = opened && days.length ? 'Trang ' + range + ' / ' + days.length : '';
+    const numbered = days.slice(offset,last).map((day,i) => day.number ?? offset+i+1).filter(Boolean);
+    const total = days[0]?.number === 0 ? days.length - 1 : days.length;
+    q('.bk-page-count').textContent = opened && numbered.length ? 'Trang ' + numbered.join('–') + ' / ' + total : '';
     filter.hidden = !ctx.review || !opened || !all.some(isFavorite);
     filter.setAttribute('aria-pressed', String(likedOnly));
+    filter.disabled = turning;
     filter.textContent = likedOnly ? 'Toàn bộ album' : 'Ảnh đã thích';
     prev.hidden = next.hidden = auto.hidden = !opened || days.length <= 2;
-    prev.disabled = offset === 0;
-    next.disabled = (!ready && !ctx.review) || last >= days.length;
+    prev.disabled = turning || offset === 0;
+    next.disabled = turning || (!ready && !ctx.review) || last >= days.length;
     auto.disabled = next.disabled || failed;
     auto.textContent = running ? 'Dừng tự lật' : 'Tự lật';
     retry.hidden = !failed || !days.length;
-    proceed.hidden = !!ctx.review || !opened || !((ready && days.length && seen.size === days.length) || (ctx.preview && failed));
+    proceed.hidden = !!ctx.review || !opened || !((!turning && ready && days.length && seen.size === days.length) || (ctx.preview && failed));
     timer.clear();
-    if (running && ready && !next.disabled && !document.hidden && !viewer.open)
+    if (running && ready && !next.disabled && !document.hidden && !viewer.open && !noteDialog.open && !turning)
       timer.set(() => turn(2), ALBUM_INTERVAL);
   }
 
@@ -500,7 +530,7 @@ export function mountAlbum(ctx) {
     stopVideo();
     viewerDay = day; viewerIndex = at;
     const version = ++viewerGeneration, item = day.items[at];
-    q('.bk-viewer-date').textContent = day.date;
+    q('.bk-viewer-date').textContent = memoryDate(item);
     q('.bk-view-index').textContent = (at + 1) + ' / ' + day.items.length;
     syncHeart(heart, item, !videoItem(item));
     viewPrev.disabled = at === 0; viewNext.disabled = at + 1 === day.items.length;
@@ -527,34 +557,61 @@ export function mountAlbum(ctx) {
   function leaf(day, number, loads) {
     const paper = document.createElement('article');
     paper.className = 'bk-leaf';
-    if (!day) { paper.classList.add('bk-blank'); paper.setAttribute('aria-hidden','true'); return paper; }
-    paper.innerHTML = '<header><time></time><span></span></header><div class="bk-montage"></div><p class="bk-note"></p>';
-    const date = find(paper, 'time'); date.textContent = day.date;
-    if (/^\d{4}-\d{2}-\d{2}$/.test(day.key)) date.dateTime = day.key;
-    find(paper, 'header span').textContent = String(number).padStart(2,'0');
-    find(paper, '.bk-note').textContent = day.note;
-    const mosaic = find(paper, '.bk-montage'), count = day.items.length;
+    if (!day) { paper.classList.add('bk-blank'); return paper; }
+    const layout = day.layout;
+    if (layout) paper.dataset.layout = layout;
+    if (layout === 'lining') {
+      paper.innerHTML = '<div class="bk-endpaper"><i aria-hidden="true">❦</i><span>Bảo &amp; Kim</span></div>';
+      return paper;
+    }
+    paper.innerHTML = '<header><time></time><span></span></header><div class="bk-montage"></div><div class="bk-inscription"></div>';
+    const date = find(paper,'time'); date.textContent = day.date;
+    find(paper,'header span').textContent = String(day.number ?? number).padStart(2,'0');
+    const inscription = find(paper,'.bk-inscription');
+    if (day.title) {
+      const title = document.createElement('h2'); title.textContent = day.title; inscription.append(title);
+    }
+    if (day.note) {
+      const note = document.createElement('button');
+      note.type = 'button'; note.className = 'bk-note'; note.textContent = day.note;
+      note.title = 'Đọc lời nhắn';
+      note.onclick = () => {
+        const dialog = q('.bk-note-dialog');
+        find(dialog,'h2').textContent = day.title || (layout === 'intro' ? bookTitle : day.date);
+        find(dialog,'p').textContent = day.note;
+        dialog.showModal(); sync();
+      };
+      inscription.append(note);
+    }
+    const mosaic = find(paper,'.bk-montage'), count = day.items.length;
     mosaic.dataset.count = count;
-    const cells = count >= 4 ? count + 3 : count;
-    if (count >= 4) mosaic.style.gridTemplateRows = 'repeat(' + Math.ceil(cells / 3) + ',minmax(0,1fr))';
+    const cells = count + 3;
+    if (!layout && count >= 4) mosaic.style.gridTemplateRows = 'repeat(' + Math.ceil(cells / 3) + ',minmax(0,1fr))';
     day.items.forEach((item, i) => {
       const tile = document.createElement('button');
       tile.type = 'button'; tile.className = 'bk-print-tile';
-      tile.setAttribute('aria-label', (videoItem(item) ? 'Phát video' : 'Xem ảnh') + ' · ' + day.date + ' · ' + (i+1));
+      tile.setAttribute('aria-label', (videoItem(item) ? 'Phát video' : 'Xem ảnh') + ' · ' + memoryDate(item) + ' · ' + (i+1));
       if (videoItem(item)) tile.classList.add('bk-video-tile');
-      if (i === count-1 && count >= 4 && cells % 3) tile.style.gridColumn = 'span ' + (4 - cells % 3);
+      if (!layout && i === count-1 && count >= 4 && cells % 3) tile.style.gridColumn = 'span ' + (4 - cells % 3);
       mosaic.append(tile);
       tile.onclick = () => displayMemory(day, i);
       const image = photo(item);
       const thumb = videoItem(item) ? item.poster || item.thumb : item.thumb || source(item);
       if (!thumb) return;
       image.src = thumb;
-      const decoded = image.decode().catch(async error => {
+      loads.push(image.decode().catch(async error => {
         if (videoItem(item) || thumb === source(item)) throw error;
         image.src = source(item); await image.decode();
-      }).then(() => tile.prepend(image));
-      loads.push(decoded);
+      }).then(() => tile.prepend(image)));
     });
+    if (day.center) {
+      const otherHalf = document.createElement('button');
+      otherHalf.className = 'bk-photo-seam'; otherHalf.type = 'button'; otherHalf.tabIndex = -1;
+      otherHalf.setAttribute('aria-label','Xem ảnh giữa · ' + day.date);
+      const image = photo(day.center); image.alt = ''; image.src = day.center.thumb;
+      otherHalf.append(image); mosaic.prepend(otherHalf);
+      otherHalf.onclick = () => displayMemory(days[offset],1);
+    }
     return paper;
   }
   async function draw() {
@@ -573,18 +630,55 @@ export function mountAlbum(ctx) {
     if (!days[offset+2]) running = false;
     sync();
   }
-  function turn(delta) {
+  async function turn(delta) {
     const at = offset + delta;
-    if (at < 0 || at >= days.length || (delta > 0 && next.disabled) || viewer.open) return;
-    offset = at; draw();
-    if (!motion()) spread.children[delta > 0 ? 1 : 0].animate([
-      {transform:'perspective(800px) rotateY(' + (delta > 0 ? -28 : 28) + 'deg)', opacity:.72},
-      {transform:'perspective(800px) rotateY(0deg)', opacity:1}
-    ], {duration:330,easing:'ease-out'});
+    if (turning || at < 0 || at >= days.length || (delta > 0 && next.disabled) || viewer.open || noteDialog.open) return;
+    // Leave the stationary half showing its old page until the sheet passes over it.
+    const forward = delta > 0, moving = forward ? 1 : 0, resting = 1 - moving;
+    const animate = !motion();
+    const old = animate ? [...spread.children].map(el => el.cloneNode(true)) : [];
+    turning = true;
+    offset = at;
+    spread.inert = true;
+    const drawn = draw();
+    let sheet, under;
+    try {
+      if (animate) {
+        const side = forward ? 'right' : 'left';
+        under = old[resting];
+        under.classList.add('bk-under', 'bk-' + (forward ? 'left' : 'right'));
+        sheet = document.createElement('div'); sheet.className = 'bk-turn bk-' + side;
+        const front = old[moving], back = spread.children[resting].cloneNode(true);
+        // draw() attaches images after decode. Populate the verso before it becomes visible.
+        const prints = back.querySelectorAll('.bk-print-tile');
+        days[offset+resting]?.items.forEach((item,i) => {
+          if (prints[i] && !prints[i].firstElementChild) {
+            const image = photo(item); image.src = item.thumb || source(item); prints[i].append(image);
+          }
+        });
+        front.classList.add('bk-face'); back.classList.add('bk-face','bk-verso');
+        sheet.append(front, back);
+        for (const el of [under, sheet]) { el.inert = true; el.setAttribute('aria-hidden','true'); }
+        book.append(under,sheet);
+        const sign = forward ? -1 : 1;
+        const flip = sheet.animate([
+          {transform:'rotateY(0deg)'}, {transform:'rotateY(' + sign*82 + 'deg)',offset:.48},
+          {transform:'rotateY(' + sign*180 + 'deg)'}
+        ], {duration:590,easing:'cubic-bezier(.43,.05,.27,.98)',fill:'forwards'});
+        const cancel = () => flip.cancel();
+        signal.addEventListener('abort',cancel,{once:true});
+        try { await flip.finished; } catch { /* Unmounted while turning. */ }
+        signal.removeEventListener('abort',cancel);
+      }
+      await drawn;
+    } finally {
+      sheet?.remove(); under?.remove(); spread.inert = false; turning = false;
+      if (!signal.aborted) sync();
+    }
   }
   function selectDays(onlyLiked, key) {
     likedOnly = onlyLiked && all.some(isFavorite);
-    days = albumDays(likedOnly ? all.filter(isFavorite) : all);
+    days = likedOnly ? favoritePages(all.filter(isFavorite)) : anniversaryPages(all);
     const pos = days.findIndex(day => day.key === key);
     offset = Math.max(0, pos - pos % 2);
     seen.clear(); running = false; draw();
@@ -624,6 +718,6 @@ export function mountAlbum(ctx) {
     advanced = true; ctx.phase('albumComplete'); ctx.next();
   },signal);
   listen(q('.bk-review-close'),'click',() => ctx.closeReview(),signal);
-  signal.addEventListener('abort',() => { stopVideo(); if (viewer.open) viewer.close(); },{once:true});
+  signal.addEventListener('abort',() => { stopVideo(); if (viewer.open) viewer.close(); if (noteDialog.open) noteDialog.close(); },{once:true});
   sync();
 }
