@@ -395,7 +395,7 @@ const albumNotes = {
   '2026-02-09': 'Chiếc quạt đỏ che gần hết mặt rồi. May mà hai đứa vẫn kịp nhìn nhau cười.',
   '2026-02-28': 'Một trái tim xanh vừa đủ chỗ cho hai đứa mình.',
   '2026-04-18': 'Kim ơi, hôm ấy sau lưng mình có bao nhiêu ngôi sao nhỉ? Bảo mải nhìn Kim nên quên đếm.',
-  '2026-08-08': 'Bảo thích bấm xem lại đoạn phim này, để thấy một khoảnh khắc nhỏ bỗng chuyển động thêm lần nữa.',
+  '2026-08-08': 'Bảo thích tấm hình này vì có Kim ngay bên cạnh. Mình cứ giữ nó ở đây nhé.',
   '2026-08-29': 'Cho Bảo ghé lại gần Kim thêm chút nữa, vừa đủ để hai đứa cùng lọt vào một tấm hình.',
   '2026-10-24': 'Mấy tấm ảnh cầm vừa trong tay. Bảo muốn giữ chúng để sau này còn ngồi xem cùng Kim.',
   '2026-11-16': 'Kim hỏi Bảo thích tấm nào nhất à? Khó quá, tấm nào cũng là Kim mà.'

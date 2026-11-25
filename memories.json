@@ -241,14 +241,6 @@
       "caption": "08 tháng 08, 2026"
     },
     {
-      "id": "memory-2026-08-08-video",
-      "type": "video",
-      "src": "./media/memory-2026-08-08-video.mp4",
-      "thumb": "./media/memory-2026-08-08-video-thumb.webp",
-      "poster": "./media/memory-2026-08-08-video-poster.webp",
-      "caption": "Video · 08 tháng 08, 2026"
-    },
-    {
       "id": "memory-2026-08-29",
       "type": "photo",
       "src": "./media/memory-2026-08-29.webp",
