@@ -390,265 +390,240 @@ export function mountWalk(ctx) {
   }
 }
 
+const albumNotes = {
+  '2025-11-23': 'Bó hoa hồng hôm ấy đã nằm gọn trong ảnh. Còn cái ôm của Kim, Bảo vẫn nhớ.',
+  '2026-02-09': 'Chiếc quạt đỏ che gần hết mặt rồi. May mà hai đứa vẫn kịp nhìn nhau cười.',
+  '2026-02-28': 'Một trái tim xanh vừa đủ chỗ cho hai đứa mình.',
+  '2026-04-18': 'Kim ơi, hôm ấy sau lưng mình có bao nhiêu ngôi sao nhỉ? Bảo mải nhìn Kim nên quên đếm.',
+  '2026-08-08': 'Bảo thích bấm xem lại đoạn phim này, để thấy một khoảnh khắc nhỏ bỗng chuyển động thêm lần nữa.',
+  '2026-08-29': 'Cho Bảo ghé lại gần Kim thêm chút nữa, vừa đủ để hai đứa cùng lọt vào một tấm hình.',
+  '2026-10-24': 'Mấy tấm ảnh cầm vừa trong tay. Bảo muốn giữ chúng để sau này còn ngồi xem cùng Kim.',
+  '2026-11-16': 'Kim hỏi Bảo thích tấm nào nhất à? Khó quá, tấm nào cũng là Kim mà.'
+};
+
+function albumDays(items) {
+  const groups = new Map();
+  for (const item of items) {
+    const iso = [item.date, item.id, item.src].map(value => String(value || '').match(/\d{4}-\d{2}-\d{2}/)?.[0]).find(Boolean);
+    const caption = (item.dateLabel || item.caption || '').replace(/^Video\s*·\s*/i, '');
+    const key = iso || caption || source(item);
+    if (!groups.has(key)) groups.set(key, {
+      key, date: iso ? iso.split('-').reverse().join('.') : caption,
+      note: albumNotes[iso] || 'Bảo giữ khoảnh khắc này cho hai đứa mình.', items: []
+    });
+    groups.get(key).items.push(item);
+  }
+  // Open the anniversary with the portrait of both of them holding the bouquet.
+  const firstDay = groups.get('2025-11-23');
+  if (firstDay) {
+    const portrait = firstDay.items.findIndex(item => item.id === 'memory-2025-11-23-04');
+    if (portrait > 0) firstDay.items.unshift(firstDay.items.splice(portrait,1)[0]);
+  }
+  return [...groups.values()];
+}
+
 export function mountAlbum(ctx) {
   const {root, signal} = ctx;
-  const allPages = ctx.memories.album ?? [];
-  let pages = allPages;
-  let favoritesOnly = false;
-  warmPrint(pages[0]);
+  const all = ctx.memories.album ?? [];
+  let days = albumDays(all), offset = 0, likedOnly = false;
+  let opened = false, ready = false, running = false, failed = false, advanced = false;
+  let generation = 0, viewerDay, viewerIndex = 0, viewerGeneration = 0;
+  const seen = new Set(), timer = later(signal), opening = later(signal);
+  warmPrint(all[0]);
+
   root.innerHTML = `
     <section class="bk-early bk-album" aria-labelledby="bk-album-title">
-      <header class="bk-scene-head">
-        <h1 id="bk-album-title">Album của hai đứa</h1>
-        <div class="bk-photo-tools"><p class="bk-page-count" aria-live="polite"></p><button class="bk-heart" type="button" hidden></button>
-          <button type="button" class="bk-filter" aria-pressed="false" hidden>Ảnh đã thích</button></div>
-      </header>
+      <header class="bk-scene-head"><h1 id="bk-album-title">Album của hai đứa</h1>
+        <div class="bk-photo-tools"><p class="bk-page-count" aria-live="polite"></p>
+          <button type="button" class="bk-filter" aria-pressed="false" hidden>Ảnh đã thích</button></div></header>
       <div class="bk-album-stage">
         <div class="bk-book">
-          <div class="bk-book-page" hidden>
-            <figure><div class="bk-page-media"></div><figcaption></figcaption></figure>
-            <p class="bk-media-state" role="status"></p>
-          </div>
+          <div class="bk-book-page" hidden></div>
           <button type="button" class="bk-book-cover" aria-label="Mở bìa album hoa hồng"></button>
         </div>
         <div class="bk-album-cats"></div>
       </div>
+      <p class="bk-media-state" role="status"></p>
       <div class="bk-controls">
         <button type="button" class="primary bk-album-open">Mở album</button>
-        <button type="button" class="secondary bk-prev" aria-label="Trang trước" hidden>← <span>Trước</span></button>
+        <button type="button" class="secondary bk-prev" aria-label="Trang trước" hidden>← Trước</button>
         <button type="button" class="secondary bk-auto" hidden></button>
-        <button type="button" class="secondary bk-next" aria-label="Trang sau" hidden><span>Sau</span> →</button>
+        <button type="button" class="secondary bk-next" aria-label="Trang sau" hidden>Sau →</button>
         <button type="button" class="secondary bk-retry" hidden>Thử tải lại</button>
-        <button type="button" class="primary bk-continue" hidden></button>
+        <button type="button" class="primary bk-continue" hidden>Đọc thư của Bảo</button>
         <button type="button" class="secondary bk-review-close" ${ctx.review ? '' : 'hidden'}>Đóng album</button>
       </div>
+      <dialog class="bk-photo-dialog bk-album-viewer" aria-label="Kỷ niệm trong album">
+        <div class="bk-viewer-head"><p class="bk-viewer-date"></p><button type="button" class="secondary bk-photo-close" autofocus>Đóng ×</button></div>
+        <div class="bk-photo-large"></div>
+        <div class="bk-photo-tools"><button type="button" class="secondary bk-view-prev" aria-label="Kỷ niệm trước">←</button>
+          <span class="bk-view-index"></span><button type="button" class="bk-heart"></button>
+          <button type="button" class="secondary bk-view-next" aria-label="Kỷ niệm sau">→</button></div>
+      </dialog>
     </section>`;
-  const book = find(root, '.bk-book');
-  const cover = find(root, '.bk-book-cover');
-  const page = find(root, '.bk-book-page');
-  const media = find(root, '.bk-page-media');
-  const caption = find(page, 'figcaption');
-  const counter = find(root, '.bk-page-count');
-  const heart = find(root, '.bk-heart');
-  const filter = find(root, '.bk-filter');
-  const state = find(root, '.bk-media-state');
-  const open = find(root, '.bk-album-open');
-  const prev = find(root, '.bk-prev');
-  const next = find(root, '.bk-next');
-  const auto = find(root, '.bk-auto');
-  const proceed = find(root, '.bk-continue');
-  const retry = find(root, '.bk-retry');
-  const timer = later(signal);
-  const animationTimer = later(signal);
-  let opened = false;
-  let turning = false;
-  let running = false;
-  let ready = false;
-  let failed = false;
-  let advanced = false;
-  let index = 0;
-  let current;
-  let animation;
-  const seen = new Set();
-
-  if (!ctx.review) {
-    ctx.cats.mount(find(root, '.bk-album-cats'));
+  const q = selector => find(root, selector);
+  const book = q('.bk-book'), cover = q('.bk-book-cover'), spread = q('.bk-book-page');
+  const open = q('.bk-album-open'), prev = q('.bk-prev'), next = q('.bk-next'), auto = q('.bk-auto');
+  const filter = q('.bk-filter'), proceed = q('.bk-continue'), retry = q('.bk-retry'), status = q('.bk-media-state');
+  const viewer = q('.bk-album-viewer'), large = q('.bk-photo-large'), heart = q('.bk-heart');
+  const viewPrev = q('.bk-view-prev'), viewNext = q('.bk-view-next');
+  if (ctx.review) q('.bk-album-cats').hidden = true;
+  else {
+    ctx.cats.mount(q('.bk-album-cats'));
     ctx.cats.setPaused(false); ctx.cats.setWalking(false);
     void ctx.cats.play('sit', {loop:false});
   }
-  else find(root, '.bk-album-cats').hidden = true;
+  function sync() {
+    const last = Math.min(offset + 2, days.length);
+    const range = last === offset + 1 ? String(last) : (offset + 1) + '–' + last;
+    q('.bk-page-count').textContent = opened && days.length ? 'Trang ' + range + ' / ' + days.length : '';
+    filter.hidden = !ctx.review || !opened || !all.some(isFavorite);
+    filter.setAttribute('aria-pressed', String(likedOnly));
+    filter.textContent = likedOnly ? 'Toàn bộ album' : 'Ảnh đã thích';
+    prev.hidden = next.hidden = auto.hidden = !opened || days.length <= 2;
+    prev.disabled = offset === 0;
+    next.disabled = (!ready && !ctx.review) || last >= days.length;
+    auto.disabled = next.disabled || failed;
+    auto.textContent = running ? 'Dừng tự lật' : 'Tự lật';
+    retry.hidden = !failed || !days.length;
+    proceed.hidden = !!ctx.review || !opened || !((ready && days.length && seen.size === days.length) || (ctx.preview && failed));
+    timer.clear();
+    if (running && ready && !next.disabled && !document.hidden && !viewer.open)
+      timer.set(() => turn(2), ALBUM_INTERVAL);
+  }
 
   function stopVideo() {
-    if (current instanceof HTMLVideoElement) current.pause();
+    const video = large.querySelector('video');
+    if (video) { video.pause(); video.dispatchEvent(new Event('storybook:video-closed', {bubbles:true})); }
   }
-
-  signal.addEventListener('abort', () => {
+  async function displayMemory(day, at) {
     stopVideo();
-    animation?.kill();
-  }, {once: true});
-
-  function complete() {
-    return pages.length > 0 && seen.size === pages.length;
-  }
-
-  function sync() {
-    syncHeart(heart, pages[index], opened && !turning && ready && !videoItem(pages[index]));
-    filter.hidden = !ctx.review || !opened || !allPages.some(isFavorite);
-    filter.disabled = turning;
-    filter.setAttribute('aria-pressed', String(favoritesOnly));
-    filter.textContent = favoritesOnly ? 'Toàn bộ album' : 'Ảnh đã thích';
-    counter.textContent = opened && pages.length ? 'Trang ' + (index + 1) + ' / ' + pages.length : '';
-    prev.hidden = auto.hidden = next.hidden = !opened || pages.length < 2;
-    prev.disabled = turning || index === 0;
-    next.disabled = turning || (!ready && !ctx.review) || index >= pages.length - 1;
-    auto.disabled = turning || failed || !ready || index >= pages.length - 1;
-    auto.textContent = running ? 'Dừng tự lật' : 'Tự lật';
-    retry.hidden = !failed || !pages.length;
-    proceed.hidden = !!ctx.review || !opened || turning || !(complete() || (ctx.preview === true && failed));
-    proceed.textContent = complete() ? 'Đọc thư của Bảo' : 'Tiếp tục bản xem thử';
-  }
-
-  function schedule() {
-    timer.clear();
+    viewerDay = day; viewerIndex = at;
+    const version = ++viewerGeneration, item = day.items[at];
+    q('.bk-viewer-date').textContent = day.date;
+    q('.bk-view-index').textContent = (at + 1) + ' / ' + day.items.length;
+    syncHeart(heart, item, !videoItem(item));
+    viewPrev.disabled = at === 0; viewNext.disabled = at + 1 === day.items.length;
+    if (!viewer.open) viewer.showModal();
     sync();
-    if (!running || turning || !ready || document.hidden || index >= pages.length - 1) return;
-    if (current instanceof HTMLVideoElement && !current.ended) return;
-    timer.set(() => turn(1), ALBUM_INTERVAL);
-  }
-
-  let pageRequest = 0;
-  async function draw() {
-    const version = ++pageRequest;
-    stopVideo();
-    current = undefined;
-    ready = false;
-    failed = false;
-    const item = pages[index];
-    const pageCaption = [item?.dateLabel || item?.date, item?.caption].filter(Boolean).join(' · ');
-    state.textContent = '';
-    if (!source(item)) {
-      media.replaceChildren();
-      caption.textContent = pageCaption;
-      failed = true;
-      running = false;
-      state.textContent = pages.length
-        ? 'Trang này hiện chưa có ảnh hoặc video.'
-        : 'Album hiện chưa có ảnh hoặc video từ thư mục “Ảnh kỉ niệm”.';
-      schedule();
-      return;
-    }
-    function shown() {
-      ready = true;
-      state.textContent = '';
-      seen.add(index);
-      warmPrint(pages[index + 1]);
-      schedule();
-    }
-
-    const isVideo = videoItem(item);
-    function unavailable() {
-      if (signal.aborted || version !== pageRequest) return;
-      media.replaceChildren();
-      caption.textContent = pageCaption;
-      ready = false;
-      seen.delete(index);
-      failed = true;
-      running = false;
-      state.textContent = isVideo ? 'Video này hiện không phát được.' : 'Ảnh này hiện không tải được.';
-      schedule();
-    }
-
-    schedule();
-    if (!isVideo) {
+    if (videoItem(item)) {
+      const video = document.createElement('video');
+      video.controls = true; video.playsInline = true; video.preload = 'metadata';
+      if (item.poster) video.poster = item.poster;
+      video.src = source(item);
+      large.replaceChildren(video);
+      video.play().catch(() => {});
+    } else {
+      const preview = photo(item); preview.src = item.thumb || source(item);
+      large.replaceChildren(preview);
+      const full = photo(item); full.src = item.full || item.fullSrc || source(item);
       try {
-        const image = await readyPrint(item, 'high');
-        if (signal.aborted || version !== pageRequest) return;
-        current = image;
-        image.alt = photoAlt(item);
-        media.replaceChildren(image);
-        caption.textContent = pageCaption;
-        shown();
-      } catch { unavailable(); }
-      return;
+        await full.decode();
+        if (!signal.aborted && viewer.open && version === viewerGeneration) large.replaceChildren(full);
+      } catch { /* Keep the smaller print available. */ }
     }
-
-    const video = current = document.createElement('video');
-    video.controls = true;
-    video.preload = 'auto';
-    video.playsInline = true;
-    video.setAttribute('aria-label', item.caption || 'Video kỷ niệm');
-    if (item.poster) video.poster = item.poster;
-    for (const event of ['play', 'pause', 'ended']) listen(video, event, schedule, signal);
-    listen(video, 'loadeddata', () => { if (current === video) shown(); }, signal);
-    listen(video, 'error', unavailable, signal);
-    state.textContent = 'Đang tải video…';
-    media.replaceChildren(video);
-    caption.textContent = pageCaption;
-    video.src = source(item);
   }
 
-  function turn(direction) {
-    const target = index + direction;
-    if (turning || target < 0 || target >= pages.length || (direction > 0 && !ready && !ctx.review)) return;
-    stopVideo();
-    timer.clear();
-    index = target;
-    if (motion() || !window.gsap) {
-      draw();
-      return;
-    }
-    turning = true;
-    page.classList.add('bk-turning');
+  function leaf(day, number, loads) {
+    const paper = document.createElement('article');
+    paper.className = 'bk-leaf';
+    if (!day) { paper.classList.add('bk-blank'); paper.setAttribute('aria-hidden','true'); return paper; }
+    paper.innerHTML = '<header><time></time><span></span></header><div class="bk-montage"></div><p class="bk-note"></p>';
+    const date = find(paper, 'time'); date.textContent = day.date;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(day.key)) date.dateTime = day.key;
+    find(paper, 'header span').textContent = String(number).padStart(2,'0');
+    find(paper, '.bk-note').textContent = day.note;
+    const mosaic = find(paper, '.bk-montage'), count = day.items.length;
+    mosaic.dataset.count = count;
+    const cells = count >= 4 ? count + 3 : count;
+    if (count >= 4) mosaic.style.gridTemplateRows = 'repeat(' + Math.ceil(cells / 3) + ',minmax(0,1fr))';
+    day.items.forEach((item, i) => {
+      const tile = document.createElement('button');
+      tile.type = 'button'; tile.className = 'bk-print-tile';
+      tile.setAttribute('aria-label', (videoItem(item) ? 'Phát video' : 'Xem ảnh') + ' · ' + day.date + ' · ' + (i+1));
+      if (videoItem(item)) tile.classList.add('bk-video-tile');
+      if (i === count-1 && count >= 4 && cells % 3) tile.style.gridColumn = 'span ' + (4 - cells % 3);
+      mosaic.append(tile);
+      tile.onclick = () => displayMemory(day, i);
+      const image = photo(item);
+      const thumb = videoItem(item) ? item.poster || item.thumb : item.thumb || source(item);
+      if (!thumb) return;
+      image.src = thumb;
+      const decoded = image.decode().catch(async error => {
+        if (videoItem(item) || thumb === source(item)) throw error;
+        image.src = source(item); await image.decode();
+      }).then(() => tile.prepend(image));
+      loads.push(decoded);
+    });
+    return paper;
+  }
+  async function draw() {
+    const version = ++generation, loads = [];
+    ready = false; failed = false; status.textContent = '';
+    const pair = days.slice(offset,offset+2);
+    spread.replaceChildren(leaf(pair[0],offset+1,loads),leaf(pair[1],offset+2,loads));
     sync();
-    animation = window.gsap.timeline({
-      onComplete: () => {
-        page.classList.remove('bk-turning');
-        turning = false;
-        schedule();
-      }
-    }).to(page, {rotationY: direction * -86, duration: .23, ease: 'power2.in'})
-      .call(draw)
-      .set(page, {rotationY: direction * 76})
-      .to(page, {rotationY: 0, duration: .32, ease: 'power2.out', clearProps: 'transform'});
+    if (!pair.length) { failed = true; status.textContent = 'Album chưa có kỷ niệm.'; sync(); return; }
+    const results = await Promise.allSettled(loads);
+    if (signal.aborted || version !== generation) return;
+    failed = results.some(result => result.status === 'rejected');
+    ready = !failed;
+    if (ready) pair.forEach(day => seen.add(day.key));
+    else { running = false; status.textContent = 'Một số ảnh chưa tải được.'; }
+    if (!days[offset+2]) running = false;
+    sync();
   }
-
-  swipePages(page, prev, next, signal);
-  function selectPages(onlyLiked, preferred) {
-    favoritesOnly = onlyLiked;
-    pages = favoritesOnly ? allPages.filter(isFavorite) : allPages;
-    if (!pages.length) { pages = allPages; favoritesOnly = false; }
-    const at = pages.indexOf(preferred);
-    index = at >= 0 ? at : Math.max(0, Math.min(index, pages.length - 1));
-    running = false;
-    seen.clear();
-    draw();
+  function turn(delta) {
+    const at = offset + delta;
+    if (at < 0 || at >= days.length || (delta > 0 && next.disabled) || viewer.open) return;
+    offset = at; draw();
+    if (!motion()) spread.children[delta > 0 ? 1 : 0].animate([
+      {transform:'perspective(800px) rotateY(' + (delta > 0 ? -28 : 28) + 'deg)', opacity:.72},
+      {transform:'perspective(800px) rotateY(0deg)', opacity:1}
+    ], {duration:330,easing:'ease-out'});
   }
-  listen(filter, 'click', () => selectPages(!favoritesOnly, pages[index]), signal);
-  listen(heart, 'click', () => {
-    if (!ready || turning) return;
-    const item = pages[index];
-    toggleFavorite(item);
-    if (favoritesOnly) selectPages(true, item);
+  function selectDays(onlyLiked, key) {
+    likedOnly = onlyLiked && all.some(isFavorite);
+    days = albumDays(likedOnly ? all.filter(isFavorite) : all);
+    const pos = days.findIndex(day => day.key === key);
+    offset = Math.max(0, pos - pos % 2);
+    seen.clear(); running = false; draw();
+  }
+  listen(heart,'click',() => {
+    const item = viewerDay.items[viewerIndex];
+    toggleFavorite(item); syncHeart(heart,item,true);
+  }, signal);
+  listen(viewer,'close',() => {
+    viewerGeneration++; stopVideo(); large.replaceChildren();
+    if (likedOnly) selectDays(true,viewerDay.key);
     else sync();
   }, signal);
-  listen(cover, 'click', () => open.click(), signal);
-  listen(open, 'click', () => {
+  listen(viewer,'cancel',e => e.stopPropagation(),signal);
+  listen(viewer,'click',e => { if (e.target === viewer) viewer.close(); },signal);
+  listen(q('.bk-photo-close'),'click',() => viewer.close(),signal);
+  listen(viewPrev,'click',() => displayMemory(viewerDay,viewerIndex-1),signal);
+  listen(viewNext,'click',() => displayMemory(viewerDay,viewerIndex+1),signal);
+  swipePages(large,viewPrev,viewNext,signal);
+  swipePages(spread,prev,next,signal);
+  listen(filter,'click',() => selectDays(!likedOnly,days[offset]?.key),signal);
+  listen(cover,'click',() => open.click(),signal);
+  listen(open,'click',() => {
     if (opened) return;
-    opened = true;
-    turning = true;
-    page.hidden = false;
-    open.disabled = true;
-    book.classList.add('bk-book-opened');
+    opened = true; open.hidden = true; spread.hidden = false; book.classList.add('bk-book-opened');
     if (!ctx.review) ctx.phase('albumOpen');
     draw();
-    animationTimer.set(() => {
-      cover.hidden = true;
-      open.hidden = true;
-      turning = false;
-      sync();
-      (pages.length > 1 ? auto : proceed.hidden ? find(root, '#bk-album-title') : proceed).focus();
-    }, motion() ? 30 : 735);
-  }, signal);
-  find(root, '#bk-album-title').tabIndex = -1;
-  listen(prev, 'click', () => turn(-1), signal);
-  listen(next, 'click', () => turn(1), signal);
-  listen(auto, 'click', () => {
-    running = !running;
-    schedule();
-  }, signal);
-  listen(retry, 'click', draw, signal);
-  listen(document, 'visibilitychange', schedule, signal);
-  listen(proceed, 'click', () => {
-    if (advanced || ctx.review || turning || !(complete() || (ctx.preview === true && failed))) return;
-    advanced = true;
-    stopVideo();
-    ctx.phase(complete() ? 'albumComplete' : 'albumSourceUnavailablePreview');
-    ctx.next();
-  }, signal);
-  listen(find(root, '.bk-review-close'), 'click', () => {
-    stopVideo();
-    ctx.closeReview();
-  }, signal);
+    opening.set(() => { cover.hidden = true; },motion() ? 0 : 480);
+  },signal);
+  listen(prev,'click',() => turn(-2),signal);
+  listen(next,'click',() => turn(2),signal);
+  listen(auto,'click',() => { running = !running; sync(); },signal);
+  listen(retry,'click',draw,signal);
+  listen(document,'visibilitychange',sync,signal);
+  listen(proceed,'click',() => {
+    if (advanced || ctx.review || proceed.hidden) return;
+    advanced = true; ctx.phase('albumComplete'); ctx.next();
+  },signal);
+  listen(q('.bk-review-close'),'click',() => ctx.closeReview(),signal);
+  signal.addEventListener('abort',() => { stopVideo(); if (viewer.open) viewer.close(); },{once:true});
   sync();
 }
-

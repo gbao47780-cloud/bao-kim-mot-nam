@@ -1,4 +1,4 @@
-import { createSoundtrack } from './soundtrack.js?v=041d0f2eedad';
+import { createSoundtrack } from './soundtrack.js?v=9722f61cf8c1';
 
 const root = document.querySelector('#scene');
 const reviewDialog = document.querySelector('#review');
@@ -72,7 +72,7 @@ async function openChapter(number) {
   document.querySelectorAll('#chapters li').forEach((el,i)=>{if (i+1===number) el.setAttribute('aria-current','step'); else el.removeAttribute('aria-current');});
   root.focus({preventScroll:true}); window.scrollTo(0,0);
   try {
-    const module = await (number <= 3 ? import('./scenes-early.js?v=c48d7b3d25c7') : import('./scenes-late.js?v=67ff55410fcc'));
+    const module = await (number <= 3 ? import('./scenes-early.js?v=6ea220a64695') : import('./scenes-late.js?v=67ff55410fcc'));
     const memories = number === 1 ? {timeline:[],album:[]} : await readMemories();
     if (session.signal.aborted) return;
     const ctx = {root,signal:session.signal,memories,
@@ -101,7 +101,7 @@ async function reviewAlbum() {
   const session = reviewSession = sessionFor(container);
   reviewDialog.showModal();
   try {
-    const [{mountAlbum},memories] = await Promise.all([import('./scenes-early.js?v=c48d7b3d25c7'),readMemories()]);
+    const [{mountAlbum},memories] = await Promise.all([import('./scenes-early.js?v=6ea220a64695'),readMemories()]);
     if (session.signal.aborted) return;
     const cleanup = await mountAlbum({root:container,signal:session.signal,memories,review:true,closeReview,
       next:closeReview,phase(){},cats:{mount(){},play:async()=>{},setPaused(){},setWalking(){}}});
