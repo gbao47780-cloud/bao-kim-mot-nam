@@ -1,4 +1,4 @@
-import { createSoundtrack } from './soundtrack.js?v=9722f61cf8c1';
+import { createSoundtrack } from './soundtrack.js?v=dda84ec6460f';
 
 const root = document.querySelector('#scene');
 const reviewDialog = document.querySelector('#review');
