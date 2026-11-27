@@ -1,0 +1,36 @@
+@font-face {
+  font-family: Lora;
+  src: url("./vendor/lora-vi.woff2") format("woff2");
+  font-weight: 400 700;
+  font-display: swap;
+}
+:root {
+  --serif: Lora, Georgia, serif;
+  --hand: "Wisteria Notes", Georgia, serif;
+}
+body { font-kerning: normal; }
+.mast-brand { font: 600 clamp(15px,1.5vw,21px)/1.25 var(--serif); letter-spacing: -.018em; }
+.bk-cover h1 { font-weight: 500; line-height: 1.15; letter-spacing: -.055em; }
+.bk-cover h1 em { font-family: "Playfair Display",Georgia,serif; font-weight: 500; letter-spacing: -.055em; }
+.bk-cover .bk-dedication { font: 400 clamp(15px,1.6vw,21px)/1.55 var(--serif); text-wrap: pretty; }
+.bk-walk .bk-scene-head h1,.bk-album .bk-scene-head h1,.late-heading h1 {
+  font: 550 clamp(28px,4.2vw,61px)/1.18 var(--serif);
+  letter-spacing: -.038em; text-wrap: balance;
+}
+.bk-album .bk-scene-head h1 { font-size: clamp(24px,3.5vw,48px); }
+.late-eyebrow,.bk-letterpress { font: 800 clamp(10px,.84vw,12px)/1.4 var(--sans); letter-spacing:.15em; }
+.bk-polaroid figcaption,.bk-print figcaption,.bk-viewer-date { font: italic 500 clamp(12px,1.24vw,17px)/1.35 "Playfair Display",Georgia,serif; }
+.late-paper-copy,.late-letter-review .letter-scroll {font: 400 clamp(16px,1.35vw,19px)/1.65 var(--serif); text-wrap:pretty;}
+.late-paper h2,.late-letter-review h2 {font: 550 clamp(23px,2.4vw,32px)/1.28 var(--serif);letter-spacing:-.025em;}
+.late-signature strong {display:inline-block;font:400 clamp(30px,3.6vw,43px)/1.35 var(--hand);color:var(--wine);}
+.bk-note-dialog h2 {font:550 clamp(22px,4.4vw,31px)/1.25 var(--serif);}
+.bk-note-dialog p {font:400 clamp(17px,3.7vw,21px)/1.55 var(--serif);}
+.late-clock strong {font-family:var(--serif);font-weight:550;font-variant-numeric:lining-nums tabular-nums;}
+.music-control,.primary,.secondary,.bk-filter {font-family:var(--sans);font-weight:700;letter-spacing:.008em;}
+.bk-photo-count,.bk-page-count,.chapter-count {font-variant-numeric:tabular-nums;}
+@media(max-width:760px) {
+  .bk-cover .bk-dedication {font-size:15px;line-height:1.45;}
+  .bk-album .bk-scene-head h1 {font-size:clamp(22px,5.6vw,32px);}
+  .late-heading h1 {font-size:clamp(26px,6.9vw,38px);}
+}
+

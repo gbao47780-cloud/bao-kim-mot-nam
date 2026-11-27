@@ -20,7 +20,7 @@ function setBackdrop(scene, name, signal) {
   backdrop.src = './art/' + name + '.webp';
 }
 
-export function mountLetter({ root, signal, cats, next, phase }) {
+export function mountLetter({ root, signal, cats, next, phase, arrival }) {
   root.innerHTML = `
     <section class="late-scene late-letter" data-letter-state="waiting" aria-labelledby="late-letter-title">
       <header class="late-heading">
@@ -138,6 +138,7 @@ export function mountLetter({ root, signal, cats, next, phase }) {
   proceed.addEventListener('click', async () => {
     proceed.disabled = true;
     proceed.textContent = 'Bảo và Kim đang cuộn mình…';
+    scene.classList.add('letter-folding');
     phase('SCENE_4_LETTER_READ');
     try {
       phase('SCENE_4_CATS_LIE_DOWN');
@@ -153,7 +154,7 @@ export function mountLetter({ root, signal, cats, next, phase }) {
     }
   }, { once: true, signal });
 
-  releaseLetter().catch(() => {
+  Promise.resolve(arrival).then(() => { if (!signal.aborted) return releaseLetter(); }).catch(() => {
     if (!signal.aborted) status.textContent = 'Chưa thể mở cảnh lá thư. Hãy tải lại trang.';
   });
 }
@@ -182,7 +183,7 @@ function heartBloom() {
   return `<div class="late-salute late-finale"><span class="late-heart">${stars}</span></div>`;
 }
 
-export function mountParty({ root, signal, cats, phase, reviewAlbum, replay, memories }) {
+export function mountParty({ root, signal, cats, phase, reviewAlbum, replay, memories, arrival }) {
   root.innerHTML = `
     <section class="late-scene late-party" aria-labelledby="late-party-title">
       <div class="late-bunting" aria-hidden="true">${'<i></i>'.repeat(10)}</div>
@@ -257,6 +258,7 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay, mem
     clearFireworks = setTimeout(stopFireworks, reducedMotion() ? 1900 : 3300);
   }
 
+  Promise.resolve(arrival).then(() => { if (!signal.aborted && !reducedMotion()) fireworks(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopFireworks(); }, { signal });
   matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', stopFireworks, { signal });
   const review = scene.querySelector('.late-letter-review');

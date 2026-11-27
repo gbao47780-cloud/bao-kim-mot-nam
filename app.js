@@ -1,3 +1,4 @@
+import { leaveChapter, revealChapter } from './chapter-motion.js?v=1b495e2c353b';
 import { createSoundtrack } from './soundtrack.js?v=dda84ec6460f';
 
 const root = document.querySelector('#scene');
@@ -24,7 +25,7 @@ function readMemories() {
 }
 function engine() {
   const generation = kittyGeneration;
-  return catEngine ||= import('./engine.js?v=79c32783273e').then(m => m.createCats(pair)).then(instance => {
+  return catEngine ||= import('./engine.js?v=0a2fa47a66fa').then(m => m.createCats(pair)).then(instance => {
     if (generation !== kittyGeneration) { instance.destroy(); throw new DOMException('Đã phát lại', 'AbortError'); }
     return cats = instance;
   });
@@ -63,19 +64,27 @@ function showError(container, error) {
   box.append(title,message,retry); container.replaceChildren(box);
 }
 async function openChapter(number) {
+  const old = root.firstElementChild;
+  const oldCat = old?.querySelector('.story-cat-pair')?.getBoundingClientRect();
+  if (old) {
+    root.inert = true;
+    await leaveChapter(old, chapter);
+  }
   active?.stop();
   const session = active = sessionFor(root);
   chapter = number; navigated = false;
   document.body.dataset.scene = number;
-  root.replaceChildren(); root.setAttribute('aria-label', chapterNames[number-1]);
+  root.setAttribute('aria-label', chapterNames[number-1]);
   document.querySelector('#chapter-no').textContent = String(number).padStart(2,'0');
   document.querySelectorAll('#chapters li').forEach((el,i)=>{if (i+1===number) el.setAttribute('aria-current','step'); else el.removeAttribute('aria-current');});
   root.focus({preventScroll:true}); window.scrollTo(0,0);
   try {
-    const module = await (number <= 3 ? import('./scenes-early.js?v=b8c850b49996') : import('./scenes-late.js?v=a978d656ba50'));
+    const module = await (number <= 3 ? import('./scenes-early.js?v=b8c850b49996') : import('./scenes-late.js?v=10600c7d150b'));
     const memories = number === 1 ? {timeline:[],album:[]} : await readMemories();
     if (session.signal.aborted) return;
-    const ctx = {root,signal:session.signal,memories,
+    let settled;
+    const arrival = new Promise(resolve => { settled = resolve; });
+    const ctx = {root,signal:session.signal,memories,arrival,
       warmWalk: () => readMemories().then(data => module.warmPrint(data.timeline[0])),
       cats:scopedCats(session),review:false,
       phase:name=>{if(!session.signal.aborted)writePhase(name);},
@@ -87,7 +96,17 @@ async function openChapter(number) {
     };
     const cleanup = await module[chapterMounts[number-1]](ctx);
     if (typeof cleanup === 'function') { if(session.signal.aborted) cleanup(); else session.cleanup = cleanup; }
+    try {
+      if (old) {
+        old.classList.add('chapter-outgoing');
+        old.inert = true; old.setAttribute('aria-hidden','true');
+        root.append(old);
+        await revealChapter(root,old,number,memories,oldCat);
+      }
+    } finally { settled(); }
+    if (old && number === 3) root.querySelector('.bk-album-open')?.click();
   } catch(e) { if(!session.signal.aborted) showError(root,e); }
+  finally { root.inert=false; root.focus({preventScroll:true}); }
 }
 function closeReview() {
   if (!reviewSession) return;
@@ -111,7 +130,8 @@ async function reviewAlbum() {
 reviewDialog.addEventListener('cancel', e=>{e.preventDefault();closeReview();});
 reviewDialog.addEventListener('click', e=>{if(e.target===reviewDialog)closeReview();});
 function replay() {
-  closeReview(); active?.stop(); kittyGeneration++; cats?.destroy(); cats = null; catEngine = null;
+  if (navigated) return;
+  navigated = true; closeReview(); active?.stop(); kittyGeneration++; cats?.destroy(); cats = null; catEngine = null;
   pair.replaceChildren(); albumComplete = false; released = false; return openChapter(1);
 }
 root.addEventListener('click', e=>{if(chapter===1 && e.target.closest('button,[role="button"]')) sound.startAfterGesture();},true);

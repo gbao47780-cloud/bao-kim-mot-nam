@@ -24,7 +24,7 @@ export async function createCats(container) {
   let width=0,height=0,dpr=1, mouth=null;
   const reduced=matchMedia('(prefers-reduced-motion: reduce)');
   function resize() {
-    const b=container.getBoundingClientRect(); width=b.width;height=b.height;
+    width=container.clientWidth; height=container.clientHeight;
     if(!width||!height)return;
     dpr=Math.min(2,window.devicePixelRatio||1);
     canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);

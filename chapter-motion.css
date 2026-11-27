@@ -1,0 +1,43 @@
+#scene {isolation:isolate;}
+#scene:has(.chapter-outgoing) {overflow:clip;}
+#scene > .chapter-outgoing {position:absolute;inset:0;z-index:-1;width:100%;height:100%;pointer-events:none;}
+.chapter-layer {position:absolute;z-index:5;inset:0;overflow:hidden;pointer-events:none;}
+.chapter-petal {position:absolute;width:12px;height:8px;border-radius:75% 20% 70% 20%;background:radial-gradient(at 25% 30%,#ffe4d7,#db879b);box-shadow:inset 1px 1px 2px #fffa;}
+.chapter-petal:nth-child(3n) {width:8px;height:6px;background:#edbd9b;}
+.bk-portal .bk-door-glow {background:linear-gradient(120deg,#ffe8aa55,transparent 60%),url('./art/memory-path.webp') center/cover;}
+.bk-opening .bk-door-leaf {animation:door-edge .87s ease both;}
+.bk-opening .bk-door-leaf::after {content:"";background:radial-gradient(ellipse,#fff4b9,transparent 70%);animation:knob-turn .23s ease both;}
+@keyframes knob-turn {from{transform:rotate(-20deg) scale(.85)}to{transform:rotate(14deg) scale(1.08)}}
+@keyframes door-edge {to{box-shadow:inset -4px 0 5px #633d36aa;filter:brightness(.83)}}
+.flying-print {padding:3px 3px 10px;background:#fff9ee;box-shadow:1px 3px 5px #713e4440;}
+.flying-print img {width:100%;height:100%;object-fit:cover;}
+.story-sticker {font:normal 14px/1 Georgia;color:#aa5063;filter:drop-shadow(0 1px 1px #fff);display:inline-block;}
+.flying-print .story-sticker {position:absolute;right:0;top:-4px;}
+[data-sticker=heart]::before {content:'♥'} [data-sticker=star]::before {content:'✦'} [data-sticker=flower]::before {content:'✿'} [data-sticker=bow]::before {content:'୨୧'} [data-sticker=berry]::before {content:'🍓'} [data-sticker=paw]::before {content:'🐾'} [data-sticker=tape]::before {content:'';display:block;width:22px;height:7px;background:repeating-linear-gradient(45deg,#dda6a4 0 3px,#f0c9ba 3px 6px);transform:rotate(-8deg)} [data-sticker=stamp]::before {content:'✉';border:1px dashed #af8a70} [data-sticker=smile]::before {content:'☺'} [data-sticker=moon]::before {content:'☾'}
+.bk-album-stage .bk-book:not(.bk-book-opened) {aspect-ratio:210/297;--bk-book-width:min(61vw,calc((100cqh - var(--cat-row) - 16px)*.707),325px);}
+.late-party-stage .late-table-album {aspect-ratio:210/297;width:16%;}
+.book-resting .bk-book-page > :last-child {transform:perspective(1000px) rotateY(-178deg);}
+.letter-folding .late-paper {animation:fold-letter .8s ease-in-out both;}
+.letter-folding .late-paper .late-paper-copy,.letter-folding .late-paper .late-continue {animation:fold-ink .45s ease both;}
+@keyframes fold-ink {to{opacity:0}}
+@keyframes fold-letter {55%{transform:perspective(800px) rotateX(30deg) scale(.72)}to{transform:scale(.48,.32);background:#f9e9d6 url('./art/envelope.webp') center/100% 100%;border-color:transparent;box-shadow:none}}
+.travelling-envelope {transform-origin:top left;background:url('./art/envelope.webp') center/90% auto no-repeat;}
+.late-party:has(~ .chapter-outgoing) .late-bunting,.late-party:has(~ .chapter-outgoing) .late-heading {animation:party-arrival .8s ease-out both;}
+@keyframes party-arrival {from{opacity:.12;transform:translateY(-8px)}}
+@media(prefers-reduced-motion:reduce){.bk-opening .bk-door-leaf,.bk-opening .bk-door-leaf::after,.letter-folding .late-paper,.letter-folding .late-paper .late-paper-copy,.letter-folding .late-paper .late-continue,.late-party:has(~ .chapter-outgoing) .late-bunting,.late-party:has(~ .chapter-outgoing) .late-heading {animation:none}}
+
+
+.chapter-layer > .story-cat-pair {z-index:3;}
+.bk-opening .bk-print::after,.bk-opening .bk-cover-copy::before {
+  content:"";position:absolute;left:4%;top:20%;width:13px;height:9px;border-radius:80% 0 80% 10%;
+  background:linear-gradient(30deg,#c76b82,#f5cbb4);pointer-events:none;animation:door-petal 1.2s ease-out both;
+}
+.bk-opening .bk-cover-copy::before {left:90%;top:55%;animation-delay:.12s;}
+@keyframes door-petal {0%{opacity:0;transform:translateY(-8px)}30%{opacity:.85}100%{opacity:0;transform:translate(19px,31px) rotate(48deg)}}
+@media(prefers-reduced-motion:reduce){.bk-opening .bk-print::after,.bk-opening .bk-cover-copy::before{display:none}}
+
+.book-resting .bk-book-page {background:#b0c5bf;}
+.bk-leaf[data-layout="bleed"]::after {content:'♥';position:absolute;right:6%;bottom:13%;font:16px/1 Georgia;color:#f5d7c3;pointer-events:none;}
+.late-party:has(~ .chapter-outgoing) .late-clock {animation:party-arrival .62s .24s ease both;}
+.late-party:has(~ .chapter-outgoing) .late-candles {animation:party-arrival .46s .33s ease both;}
+@media(prefers-reduced-motion:reduce){.late-party:has(~ .chapter-outgoing) .late-clock,.late-party:has(~ .chapter-outgoing) .late-candles{animation:none}}
