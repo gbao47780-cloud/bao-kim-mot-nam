@@ -10,7 +10,7 @@
   font-display: swap;
 }
 .bk-album {
-  --hand: "Wisteria Notes", Georgia, serif;
+  --album-display: "Playfair Display", Georgia, serif;
   --cat-row: clamp(66px, 11dvh, 102px);
 }
 #scene > .bk-album, #review-body > .bk-album {
@@ -18,7 +18,7 @@
   align-content:stretch; gap:clamp(5px,1vh,12px);
 }
 #review-body {height:min(84dvh,740px);}
-.bk-album .bk-scene-head h1 {font:400 clamp(30px,5.8vw,60px)/1.07 var(--hand);letter-spacing:0;}
+.bk-album .bk-scene-head h1 {font:400 clamp(30px,5.8vw,60px)/1.07 var(--album-display);letter-spacing:0;}
 .bk-album-stage {
   container-type:size; align-self:stretch; align-items:center;
   grid-template-rows:minmax(0,1fr) auto; row-gap:8px; width:min(100%,1040px);
@@ -43,7 +43,7 @@
   box-shadow:inset 0 0 0 2px #c9dbd4,2px 3px 0 #eddcc5,3px 5px 0 #9f8a72;
 }
 .bk-book-cover {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6%;padding:7%;color:#69522b;}
-.bk-cloth-title {font:400 clamp(18px,3.5vw,36px)/1.1 var(--hand);text-shadow:0 1px 0 #fff5d9;}
+.bk-cloth-title {font:400 clamp(18px,3.5vw,36px)/1.1 var(--album-display);text-shadow:0 1px 0 #fff5d9;}
 .bk-cover-window,.late-cover-window {width:61%;aspect-ratio:1;border-radius:4%;overflow:hidden;border:2px solid #b8a075;box-shadow:0 1px 0 #f8efd8;}
 .bk-cover-window img,.late-cover-window img {display:block;width:100%;height:100%;object-fit:cover;object-position:center 39%;}
 .late-party-stage .late-table-album {display:grid;place-items:center;padding:0;aspect-ratio:1;height:auto;width:19%;transform:rotate(-11deg) skewX(13deg) scaleY(.52);}
@@ -61,24 +61,24 @@
 .bk-leaf[data-layout] .bk-montage {grid-template:1fr / 1fr; grid-auto-flow:row;}
 .bk-leaf[data-layout] .bk-print-tile {grid-area:auto;box-shadow:0 1px 3px #58433040;}
 .bk-inscription:empty {display:none;}
-.bk-inscription h2,.bk-note-dialog h2 {font:400 clamp(14px,7.2cqw,32px)/1 var(--hand);color:#64433c;margin:0 0 .12em;letter-spacing:0;}
+.bk-inscription h2,.bk-note-dialog h2 {font:400 clamp(14px,7.2cqw,32px)/1 var(--album-display);color:#64433c;margin:0 0 .12em;letter-spacing:0;}
 .bk-leaf .bk-note {display:block; width:100%; padding:0; border:0; background:transparent;
-  font:400 clamp(12px,5.3cqw,24px)/1.09 var(--hand); color:#594139; text-align:left; cursor:zoom-in;}
+  font:600 clamp(11px,4.05cqw,17px)/1.27 var(--sans); color:#594139; text-align:left; cursor:zoom-in;}
 .bk-note-dialog {width:min(88vw,430px); padding:clamp(22px,5vw,36px);border-radius:7px;color:#594139;background:#fff9ed;text-align:center;}
 .bk-note-dialog h2 {font-size:32px;}
-.bk-note-dialog p {font:400 29px/1.28 var(--hand);margin:18px 0;}
+.bk-note-dialog p {font:400 29px/1.28 var(--album-display);margin:18px 0;}
 .bk-leaf[data-layout="lining"] {place-items:center;display:grid;grid-template:1fr/1fr;background:repeating-linear-gradient(45deg,#adc4be55 0 1px,transparent 1px 6px),#d6e1d6;}
-.bk-endpaper {display:grid;justify-items:center;color:#62796a;font:400 clamp(18px,9cqw,40px)/1.2 var(--hand);}
+.bk-endpaper {display:grid;justify-items:center;color:#62796a;font:400 clamp(18px,9cqw,40px)/1.2 var(--album-display);}
 .bk-endpaper i {font:400 1.4em Georgia;color:#81734f;}
 .bk-leaf[data-layout="intro"] {display:flex;align-items:center;justify-content:center;}
 .bk-leaf[data-layout="intro"] header {position:absolute;inset:auto 8% 4%;}
 .bk-leaf[data-layout="intro"] .bk-montage {display:none;}
 .bk-leaf[data-layout="intro"] .bk-inscription {
-  position:relative;width:95%;padding:11% 8% 14%;background:#f2d7d2;
+  position:relative;width:95%;padding:8% 6% 10%;background:#f2d7d2;
   clip-path:polygon(0 2%,11% 1%,23% 2%,36% 0,49% 2%,65% 1%,85% 2%,100% 0,99% 98%,87% 97%,76% 100%,61% 98%,48% 100%,31% 98%,13% 100%,0 98%);
   transform:rotate(-2deg);
 }
-.bk-leaf[data-layout="intro"] .bk-note {font-size:clamp(13px,6.5cqw,30px);text-align:center;}
+.bk-leaf[data-layout="intro"] .bk-note {font-size:clamp(11.5px,4.7cqw,21px);text-align:center;}
 .bk-leaf[data-layout="intro"] .bk-inscription::after {
   content:"❦";position:absolute;right:7%;bottom:0;color:#8c966e;font:400 clamp(13px,8cqw,32px) Georgia;pointer-events:none;
 }
@@ -136,7 +136,21 @@
   .bk-leaf[data-layout="film"] .bk-inscription {max-height:100%;min-height:0;display:flex;flex-direction:column;}
   .bk-leaf[data-layout="film"] .bk-note {min-height:0;font-size:clamp(11px,5.1cqw,15px);line-height:1.04;}
   .bk-leaf[data-layout="film"] .bk-inscription h2 {font-size:clamp(12px,6.3cqw,17px);}
-  .bk-leaf .bk-note,.bk-inscription h2 {-webkit-text-stroke:.18px currentColor;}
+  .bk-leaf .bk-note,.bk-inscription h2 {-webkit-text-stroke:0;}
 
 }
 
+
+.bk-book-cover .bk-cloth-title {font:italic 500 clamp(13px,2.4vw,24px)/1.32 var(--album-display);max-width:20ch;}
+.bk-inscription h2 {font:600 clamp(13px,5.4cqw,26px)/1.18 var(--album-display);letter-spacing:-.022em;margin-bottom:.3em;}
+.bk-leaf[data-layout="postcard-print"] .bk-montage {background:#fffaf0;border:1px solid #c6b9a3;padding:3%;box-shadow:0 2px 4px #54443227;}
+.bk-leaf[data-layout="postcard-print"] .bk-print-tile {background:#fffaf0;box-shadow:none;}
+.bk-leaf[data-layout="postcard-print"] img {object-fit:contain;}
+.bk-leaf[data-layout="postcard-note"] {grid-template-rows:auto minmax(0,1fr);background:linear-gradient(130deg,#faf5e8,#f5e8df);}
+.bk-leaf[data-layout="postcard-note"] .bk-montage {display:none;}
+.bk-leaf[data-layout="postcard-note"] .bk-inscription {align-self:center;padding:0 6%;}
+.bk-leaf[data-layout="postcard-note"] .bk-inscription::before {content:"";display:block;width:19%;height:2px;margin-bottom:7%;background:#a96c69;}
+.bk-leaf[data-layout="postcard-note"] h2 {font-size:clamp(16px,7.8cqw,34px);color:#753f4f;}
+.bk-leaf[data-layout="postcard-note"] .bk-note {line-height:1.45;}
+.bk-leaf[data-layout="postcard-note"]:first-child {background:linear-gradient(110deg,#edf2e9,#f6f3e8);}
+.bk-leaf[data-layout="postcard-note"]:first-child .bk-inscription::before {background:#829785;}
