@@ -37,7 +37,7 @@ export async function leaveChapter(scene, number) {
   }
 }
 
-export async function revealChapter(root, old, number, memories, oldCat) {
+export async function revealChapter(root, old, number, memories, oldCat, cakeOrigin) {
   const scene=root.firstElementChild;
   if (!old || !scene) return;
   const layer=document.createElement('div');
@@ -96,16 +96,37 @@ export async function revealChapter(root, old, number, memories, oldCat) {
       motions.push(move(book,[{transform:'translateY(8%) scale(.83)'},{transform:'none'}],900));
     }
     if(number===5 && start) {
-      const target=scene.querySelector('.late-party-envelope');
+      const target=scene.querySelector('.wish-envelope');
       const dest=target.getBoundingClientRect();
       const envelope=document.createElement('div'); envelope.className='travelling-envelope';
       placed(layer,envelope,dest);
       target.style.visibility='hidden';
       source.style.visibility='hidden';
       motions.push(move(envelope,[{transform:between(start,dest)},{transform:'none'}],950).finally(()=>target.style.visibility=''));
-      motions.push(move(scene.querySelector('.late-party-stage'),[{transform:'scale(1.055)'},{transform:'none'}],830));
+
     }
-    if(number===1 || number===2) {
+    if (number === 6) {
+      const star = old.querySelector('.wish-guide');
+      const plate = scene.querySelector('.atelier-plate');
+      if (star && plate) {
+        const origin = star.getBoundingClientRect(), end = plate.getBoundingClientRect();
+        const x = end.left + end.width/2 - origin.left - origin.width/2;
+        const y = end.top + end.height/2 - origin.top - origin.height/2;
+        const guide = document.createElement('span'); guide.className='flying-wish'; guide.textContent='✦';
+        placed(layer,guide,origin); star.style.visibility='hidden';
+        motions.push(move(guide,[{transform:'none'},{transform:'translate('+x*.55+'px,'+(y*.4-26)+'px) rotate(28deg)',offset:.5},{transform:'translate('+x+'px,'+y+'px) scale(.25)',opacity:0}],1050));
+      }
+    }
+    if (number === 7 && cakeOrigin) {
+      const cake = scene.querySelector('.wish-cake');
+      const target = cake.getBoundingClientRect(), parent = cake.parentElement;
+      const style = cake.getAttribute('style');
+      placed(layer,cake,target); cake.style.transformOrigin='top left';
+      motions.push(move(cake,[{transform:between(cakeOrigin,target)},{transform:'none'}],1050).finally(()=>{
+        cake.setAttribute('style',style || ''); parent.prepend(cake);
+      }));
+    }
+    if(number===1 || number===2 || number===7) {
       for(let i=0;i<(innerWidth<600?6:10);i++){
         const petal=document.createElement('i');petal.className='chapter-petal';layer.append(petal);
         petal.style.left=(i%2?88+i%8:2+i%9)+'%';petal.style.top=(3+i*8)+'%';

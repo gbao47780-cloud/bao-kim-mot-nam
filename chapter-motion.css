@@ -41,3 +41,10 @@
 .late-party:has(~ .chapter-outgoing) .late-clock {animation:party-arrival .62s .24s ease both;}
 .late-party:has(~ .chapter-outgoing) .late-candles {animation:party-arrival .46s .33s ease both;}
 @media(prefers-reduced-motion:reduce){.late-party:has(~ .chapter-outgoing) .late-clock,.late-party:has(~ .chapter-outgoing) .late-candles{animation:none}}
+
+.flying-wish {display:grid;place-items:center;color:#fff4a2;font-size:clamp(25px,6vw,62px);line-height:1;text-shadow:0 0 12px #ffcc50,0 0 24px #ffc248;}
+.chapter-layer > .wish-cake {z-index:2;pointer-events:none;}
+@media (min-width:541px) and (max-width:760px) {
+  .chapter-rail .folio {display:none;}
+  .chapter-rail ol {gap:11px;}
+}

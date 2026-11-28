@@ -183,7 +183,7 @@ function heartBloom() {
   return `<div class="late-salute late-finale"><span class="late-heart">${stars}</span></div>`;
 }
 
-export function mountParty({ root, signal, cats, phase, reviewAlbum, replay, memories, arrival }) {
+export function mountParty({ root, signal, cats, phase, reviewAlbum, replay, memories, arrival, story }) {
   root.innerHTML = `
     <section class="late-scene late-party" aria-labelledby="late-party-title">
       <div class="late-bunting" aria-hidden="true">${'<i></i>'.repeat(10)}</div>
@@ -232,6 +232,12 @@ export function mountParty({ root, signal, cats, phase, reviewAlbum, replay, mem
   const clock = scene.querySelectorAll('.late-clock strong');
   const effects = scene.querySelector('.late-fireworks');
   setBackdrop(scene, 'party-garden', signal);
+  if (story?.cake) {
+    const dessert = scene.querySelector('.late-dessert');
+    dessert.querySelector('.late-cake').remove();
+    dessert.querySelector('.late-plate').remove();
+    dessert.prepend(story.cake);
+  }
   cats.mount(scene.querySelector('.late-cat-host'));
   phase('SCENE_5_CELEBRATION');
   phase('SCENE_5_CATS_SLEEP_LOOP');

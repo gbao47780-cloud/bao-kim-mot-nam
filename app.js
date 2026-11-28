@@ -1,11 +1,18 @@
-import { leaveChapter, revealChapter } from './chapter-motion.js?v=1b495e2c353b';
+import { leaveChapter, revealChapter } from './chapter-motion.js?v=c806c25a984b';
 import { createSoundtrack } from './soundtrack.js?v=dda84ec6460f';
 
 const root = document.querySelector('#scene');
 const reviewDialog = document.querySelector('#review');
 const sound = createSoundtrack(document.querySelector('#music'), document.querySelector('#music-label'));
-const chapterNames = ['Cánh cửa', 'Con đường ký ức', 'Album kỷ niệm', 'Lá thư của Bảo', 'Bữa tiệc'];
-const chapterMounts = ['mountDoor','mountWalk','mountAlbum','mountLetter','mountParty'];
+const chapterNames = ['Cánh cửa', 'Con đường ký ức', 'Album kỷ niệm', 'Lá thư của Bảo', 'Vườn điều ước', 'Xưởng bánh', 'Bữa tiệc'];
+const chapterMounts = ['mountDoor','mountWalk','mountAlbum','mountLetter','mountWishes','mountAtelier','mountParty'];
+const story = {cakeStyle:'garden-berry', cake:null};
+function loadChapter(number) {
+  if (number <= 3) return import('./scenes-early.js?v=733962b1f0c4');
+  if (number === 5) return import('./wishes.js?v=e93ecc9480b7');
+  if (number === 6) return import('./cake-atelier.js?v=6f93fd23f9c5');
+  return import('./scenes-late.js?v=3b181a4416be');
+}
 let chapter = 0, active, reviewSession, cats, catEngine, kittyGeneration = 0;
 let released = false, albumComplete = false, navigated = false;
 const pair = document.createElement('div');
@@ -65,6 +72,7 @@ function showError(container, error) {
 }
 async function openChapter(number) {
   const old = root.firstElementChild;
+  const cakeOrigin = number === 7 ? story.cake?.getBoundingClientRect() : null;
   const oldCat = old?.querySelector('.story-cat-pair')?.getBoundingClientRect();
   if (old) {
     root.inert = true;
@@ -79,17 +87,17 @@ async function openChapter(number) {
   document.querySelectorAll('#chapters li').forEach((el,i)=>{if (i+1===number) el.setAttribute('aria-current','step'); else el.removeAttribute('aria-current');});
   root.focus({preventScroll:true}); window.scrollTo(0,0);
   try {
-    const module = await (number <= 3 ? import('./scenes-early.js?v=733962b1f0c4') : import('./scenes-late.js?v=10600c7d150b'));
+    const module = await loadChapter(number);
     const memories = number === 1 ? {timeline:[],album:[]} : await readMemories();
     if (session.signal.aborted) return;
     let settled;
     const arrival = new Promise(resolve => { settled = resolve; });
-    const ctx = {root,signal:session.signal,memories,arrival,
+    const ctx = {root,signal:session.signal,memories,arrival,story,
       warmWalk: () => readMemories().then(data => module.warmPrint(data.timeline[0])),
       cats:scopedCats(session),review:false,
       phase:name=>{if(!session.signal.aborted)writePhase(name);},
       next() {
-        if (session.signal.aborted || navigated || number >= 5) return;
+        if (session.signal.aborted || navigated || number >= chapterNames.length) return;
         if (number === 3) albumComplete = true;
         navigated = true; return openChapter(number+1);
       }, replay,reviewAlbum,closeReview
@@ -101,7 +109,7 @@ async function openChapter(number) {
         old.classList.add('chapter-outgoing');
         old.inert = true; old.setAttribute('aria-hidden','true');
         root.append(old);
-        await revealChapter(root,old,number,memories,oldCat);
+        await revealChapter(root,old,number,memories,oldCat,cakeOrigin);
       }
     } finally { settled(); }
     if (old && number === 3) root.querySelector('.bk-album-open')?.click();
@@ -115,7 +123,7 @@ function closeReview() {
   document.querySelector('#review-body').replaceChildren();
 }
 async function reviewAlbum() {
-  if (chapter !== 5 || reviewSession) return;
+  if (chapter !== chapterNames.length || reviewSession) return;
   const container = document.querySelector('#review-body');
   const session = reviewSession = sessionFor(container);
   reviewDialog.showModal();
@@ -132,6 +140,7 @@ reviewDialog.addEventListener('click', e=>{if(e.target===reviewDialog)closeRevie
 function replay() {
   if (navigated) return;
   navigated = true; closeReview(); active?.stop(); kittyGeneration++; cats?.destroy(); cats = null; catEngine = null;
+  story.cake = null; story.cakeStyle = 'garden-berry';
   pair.replaceChildren(); albumComplete = false; released = false; return openChapter(1);
 }
 root.addEventListener('click', e=>{if(chapter===1 && e.target.closest('button,[role="button"]')) sound.startAfterGesture();},true);

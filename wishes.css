@@ -1,0 +1,18 @@
+.wish-garden {position:relative;isolation:isolate;display:grid;grid-template-rows:auto minmax(65px,1fr) auto minmax(65px,.8fr) auto;align-items:center;justify-items:center;gap:10px;height:100%;min-height:0;overflow:auto;padding:clamp(12px,3vh,32px) 4%;color:#fff5dc;text-align:center;background:linear-gradient(180deg,#293051dd,#53445fd9 57%,#39394dbc),url('./art/party-garden.webp') center/cover;}
+.wish-garden header p {font:700 12px var(--sans);letter-spacing:.1em;margin:0 0 5px;color:#ffe5b5;}
+.wish-garden h1 {font:550 clamp(29px,5vw,58px)/1.12 var(--serif);margin:0;}
+.wish-sky {width:min(96%,620px);height:100%;display:flex;align-items:center;justify-content:space-evenly;}
+.wish-star {background:none;border:0;display:grid;justify-items:center;color:#fff6dd;font:700 clamp(12px,2vw,16px) var(--sans);gap:3px;min-width:54px;}
+.wish-star span,.wish-guide {color:#ffdf94;text-shadow:0 0 12px #f2aa68,0 0 35px #ffcc5c80;}
+.wish-star span {font:clamp(46px,8vw,83px)/1 Georgia;animation:wishlight 4s ease-in-out infinite alternate;}
+.wish-star:nth-child(2){align-self:flex-start;margin-top:4%;}
+.wish-star[aria-pressed=true] span {color:#ffd0c8;text-shadow:0 0 18px #ffbcb3;}
+.wish-message {font:500 clamp(16px,2vw,22px)/1.45 var(--serif);width:min(100%,510px);min-height:3em;text-wrap:balance;}
+.wish-rest {position:relative;align-self:stretch;width:min(70%,320px);background:url('./art/cushion.webp') center bottom/85% 30% no-repeat;}
+.wish-cats {height:100%;width:80%;margin:auto;}
+.wish-envelope {position:absolute;bottom:0;right:3%;width:14%;height:20%;background:url('./art/envelope.webp') center/contain no-repeat;}
+.wish-guide {position:absolute;right:3%;top:10%;font:26px Georgia;}
+.wish-actions {display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+@keyframes wishlight {to{transform:translateY(-4px);filter:brightness(1.14);}}
+@media(prefers-reduced-motion:reduce){.wish-star span{animation:none;}}
+
