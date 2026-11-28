@@ -9,8 +9,8 @@ const chapterMounts = ['mountDoor','mountWalk','mountAlbum','mountLetter','mount
 const story = {cakeStyle:'garden-berry', cake:null};
 function loadChapter(number) {
   if (number <= 3) return import('./scenes-early.js?v=733962b1f0c4');
-  if (number === 5) return import('./wishes.js?v=e93ecc9480b7');
-  if (number === 6) return import('./cake-atelier.js?v=6f93fd23f9c5');
+  if (number === 5) return import('./wishes.js?v=9e78244a95fa');
+  if (number === 6) return import('./cake-atelier.js?v=acf96ec4face');
   return import('./scenes-late.js?v=3b181a4416be');
 }
 let chapter = 0, active, reviewSession, cats, catEngine, kittyGeneration = 0;
